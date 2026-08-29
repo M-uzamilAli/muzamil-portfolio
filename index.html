@@ -1644,6 +1644,10 @@
           <a class="contact-val" href="tel:+923022371885">+92-302-2371885</a>
         </div>
         <div class="contact-row">
+          <span class="contact-label">WhatsApp</span>
+          <a class="contact-val" href="https://wa.me/923022371885" target="_blank" rel="noopener">+92-302-2371885</a>
+        </div>
+        <div class="contact-row">
           <span class="contact-label">Location</span>
           <span class="contact-val" style="cursor:default;">Karachi, Pakistan</span>
         </div>
@@ -1887,6 +1891,7 @@
       ],
       contact: () => [
         'email     me@muzamilali.online',
+        'whatsapp  wa.me/923022371885',
         'github    github.com/MUZAMILALISULEMAN',
         'linkedin  linkedin.com/in/muzamil-ali-b771aa356',
       ],
@@ -1925,6 +1930,7 @@
       ],
       github: () => { window.open('https://github.com/MUZAMILALISULEMAN', '_blank'); return ['opening github …']; },
       linkedin: () => { window.open('https://www.linkedin.com/in/muzamil-ali-b771aa356', '_blank'); return ['opening linkedin …']; },
+      whatsapp: () => { window.open('https://wa.me/923022371885', '_blank'); return ['opening whatsapp …']; },
       email: () => {
         if (navigator.clipboard) {
           navigator.clipboard.writeText('me@muzamilali.online').catch(() => {});
