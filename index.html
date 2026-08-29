@@ -475,7 +475,7 @@
     .skill-group {
       background: var(--bg);
       padding: 20px 22px;
-      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), background 0.3s var(--ease);
+      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), background 0.3s var(--ease), opacity 0.35s var(--ease);
     }
 
     :root:not(.light) .skill-group:hover {
@@ -520,12 +520,57 @@
       padding: 3px 8px;
       line-height: 1.5;
       cursor: pointer;
-      transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+      user-select: none;
+      touch-action: manipulation;
+      transition: color 0.2s var(--ease), border-color 0.2s var(--ease), background 0.2s var(--ease);
     }
 
     .tag:hover {
       color: var(--accent);
       border-color: var(--accent);
+    }
+
+    /* double-click a chip → every matching chip lights up, everything else fades */
+    @keyframes match-pulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.14); }
+      100% { transform: scale(1); }
+    }
+
+    .tag-match {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      animation: match-pulse 0.35s var(--ease);
+    }
+
+    .dim-card { opacity: 0.3; }
+
+    .filter-pill {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translate(-50%, 10px);
+      z-index: 90;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 99px;
+      padding: 7px 16px;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s var(--ease), transform 0.3s var(--ease);
+      box-shadow: var(--shadow-hover);
+      white-space: nowrap;
+    }
+
+    .filter-pill.on {
+      opacity: 1;
+      transform: translate(-50%, 0);
+      pointer-events: auto;
     }
 
     /* PROJECTS */
@@ -549,7 +594,7 @@
       position: relative;
       background: var(--bg);
       padding: 28px 28px;
-      transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
+      transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease), opacity 0.35s var(--ease);
     }
 
     /* cursor-tracking glow — sits behind content, only shows on hover */
@@ -773,7 +818,7 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 24px 28px;
-      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s var(--ease);
+      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s var(--ease), opacity 0.35s var(--ease);
     }
 
     :root:not(.light) .edu-card:hover {
@@ -1602,6 +1647,10 @@
           <span class="contact-label">Location</span>
           <span class="contact-val" style="cursor:default;">Karachi, Pakistan</span>
         </div>
+        <div class="contact-row">
+          <span class="contact-label">My time</span>
+          <span class="contact-val" style="cursor:default;" id="karachiTime"></span>
+        </div>
       </div>
     </section>
 
@@ -1657,6 +1706,22 @@
     // Motion is opt-in via the js class — no-JS visitors see a fully static page.
     root.classList.add('js');
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Live Karachi clock in the contact section
+    const karachiEl = document.getElementById('karachiTime');
+    if (karachiEl) {
+      const fmt = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+      });
+      const hourFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Karachi', hour: 'numeric', hour12: false });
+      const tickClock = () => {
+        const kh = parseInt(hourFmt.format(new Date()), 10);
+        const awake = (kh >= 9 || kh < 1) ? 'probably awake ☀' : 'probably asleep 🌙';
+        karachiEl.textContent = fmt.format(new Date()) + ' PKT · ' + awake;
+      };
+      tickClock();
+      setInterval(tickClock, 1000);
+    }
 
     // Typewriter hero name (the blinking cursor finally earns its keep)
     const nameEl = document.querySelector('.hero-name');
@@ -1765,6 +1830,26 @@
       return p;
     };
 
+    // Opt-in mechanical key clicks (WebAudio — no assets, near-silent blips)
+    let soundOn = store.get('term-sound') === 'on';
+    let audioCtx = null;
+    const keyClick = (freq) => {
+      if (!soundOn) return;
+      try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const t = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = freq + Math.random() * 250;
+        gain.gain.setValueAtTime(0.012, t);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.03);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(t);
+        osc.stop(t + 0.035);
+      } catch {}
+    };
+
     const TERM_CMDS = {
       help: () => [
         'available commands:',
@@ -1781,6 +1866,7 @@
         '  neofetch     system info, sort of',
         '  joke         one dev joke, on the house',
         '  theme        toggle dark / light',
+        '  sound        toggle key-click sounds',
         '  history      what you typed',
         '  clear        clean the screen',
         'psst — a few commands are not listed here 👀',
@@ -1887,6 +1973,12 @@
         return [];
       },
       coffee: () => ['   ( (', '    ) )', '  ........', '  |      |]', '  \\      /', '   `----´   c[_] here, you probably need this more than i do'],
+      sound: () => {
+        soundOn = !soundOn;
+        store.set('term-sound', soundOn ? 'on' : 'off');
+        if (soundOn) keyClick(1400);
+        return ['key-click sounds ' + (soundOn ? 'on 🔊 — type something' : 'off 🔇')];
+      },
       cat: () => ['meow. (try ‘cv’ if you wanted the pdf)'],
       exit: () => ['there is no escape. try ‘help’ instead.'],
     };
@@ -1896,7 +1988,9 @@
 
     if (termInput) {
       termInput.addEventListener('keydown', (e) => {
+        if (e.key.length === 1 || e.key === 'Backspace') keyClick(2300);
         if (e.key === 'Enter') {
+          keyClick(1200);
           const raw = termInput.value.trim();
           termInput.value = '';
           if (!raw) return;
@@ -2039,6 +2133,53 @@
         }).catch(() => { window.location.href = emailLink.href; });
       });
     }
+
+    // Double-click a chip → cross-highlight that tech everywhere, fade the rest
+    const filterPill = document.createElement('button');
+    filterPill.className = 'filter-pill';
+    filterPill.type = 'button';
+    document.body.appendChild(filterPill);
+
+    const taggedCards = document.querySelectorAll('.skill-group, .project-card, .edu-card');
+    const tagName = (t) => t.textContent.trim().toLowerCase();
+    let activeFilter = null;
+
+    const clearFilter = () => {
+      activeFilter = null;
+      document.querySelectorAll('.tag-match').forEach((t) => t.classList.remove('tag-match'));
+      document.querySelectorAll('.dim-card').forEach((c) => c.classList.remove('dim-card'));
+      filterPill.classList.remove('on');
+    };
+
+    const applyFilter = (name, label) => {
+      activeFilter = name;
+      let hits = 0;
+      document.querySelectorAll('.tag').forEach((t) => {
+        const match = tagName(t) === name;
+        t.classList.toggle('tag-match', match);
+        if (match) hits++;
+      });
+      taggedCards.forEach((card) => {
+        const has = [...card.querySelectorAll('.tag')].some((t) => tagName(t) === name);
+        card.classList.toggle('dim-card', !has);
+      });
+      filterPill.textContent = '✕ ' + label + ' — ' + hits + (hits === 1 ? ' place' : ' places') + ' on this page';
+      filterPill.classList.add('on');
+    };
+
+    document.querySelectorAll('.tag').forEach((tag) => {
+      tag.title = 'double-click to trace this across the page';
+      tag.addEventListener('dblclick', () => {
+        const name = tagName(tag);
+        if (activeFilter === name) clearFilter();
+        else applyFilter(name, tag.textContent.trim());
+      });
+    });
+
+    filterPill.addEventListener('click', clearFilter);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && activeFilter) clearFilter();
+    });
 
     // Cursor-tracking glow on project cards
     if (!reduceMotion && matchMedia('(hover: hover)').matches) {
