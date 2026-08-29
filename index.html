@@ -66,6 +66,7 @@
       --shadow-nav: none;
       --mono: 'JetBrains Mono', monospace;
       --sans: 'Inter', sans-serif;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     /* ── WARM LIGHT MODE ── */
@@ -86,6 +87,31 @@
     }
 
     html { scroll-behavior: smooth; }
+
+    /* slim, themed scrollbars — page and terminal alike */
+    * {
+      scrollbar-width: thin;                       /* Firefox */
+      scrollbar-color: var(--border-light) transparent;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-light);
+      border-radius: 99px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+
+    .terminal::-webkit-scrollbar { width: 5px; }
+
+    ::selection {
+      background: var(--accent);
+      color: #0A0A0A;
+    }
+
+    :root.light ::selection {
+      color: #FDFAF5;
+    }
 
     body {
       background: var(--bg);
@@ -110,6 +136,24 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      transition: height 0.3s var(--ease), background 0.3s var(--ease),
+                  border-color 0.3s var(--ease), box-shadow 0.3s var(--ease);
+    }
+
+    /* with JS: nav starts airy and transparent at the top of the page… */
+    .js nav {
+      height: 64px;
+      background: transparent;
+      border-bottom-color: transparent;
+      box-shadow: none;
+    }
+
+    /* …and condenses once you scroll */
+    .js nav.scrolled {
+      height: 52px;
+      background: var(--nav-bg);
+      border-bottom-color: var(--border);
+      box-shadow: var(--shadow-nav);
     }
 
     .nav-logo {
@@ -277,6 +321,7 @@
       color: var(--muted);
       margin-bottom: 28px;
       font-weight: 400;
+      min-height: 1.7em; /* keeps the line from collapsing mid-typewriter */
     }
 
     .hero-role span {
@@ -372,6 +417,32 @@
     }
 
     /* ABOUT */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 28px 32px;
+      margin-top: 36px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+    }
+
+    .stat-value {
+      display: block;
+      font-family: var(--mono);
+      font-size: clamp(30px, 4.5vw, 38px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
     .about-text {
       font-size: 15px;
       color: var(--muted);
@@ -404,7 +475,11 @@
     .skill-group {
       background: var(--bg);
       padding: 20px 22px;
-      transition: box-shadow 0.18s, transform 0.18s;
+      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), background 0.3s var(--ease);
+    }
+
+    :root:not(.light) .skill-group:hover {
+      background: var(--surface);
     }
 
     :root.light .skill-group {
@@ -444,6 +519,13 @@
       border-radius: 3px;
       padding: 3px 8px;
       line-height: 1.5;
+      cursor: pointer;
+      transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+    }
+
+    .tag:hover {
+      color: var(--accent);
+      border-color: var(--accent);
     }
 
     /* PROJECTS */
@@ -464,10 +546,26 @@
     }
 
     .project-card {
+      position: relative;
       background: var(--bg);
       padding: 28px 28px;
-      transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+      transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
     }
+
+    /* cursor-tracking glow — sits behind content, only shows on hover */
+    .project-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s var(--ease);
+      background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 3%, transparent), transparent 70%);
+    }
+
+    .project-card:hover::before { opacity: 1; }
+
+    .project-card > * { position: relative; }
 
     :root.light .project-card {
       background: var(--surface);
@@ -559,7 +657,12 @@
       border-radius: 6px;
       overflow: hidden;
       margin-bottom: 1px;
-      transition: box-shadow 0.18s, transform 0.18s;
+      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s var(--ease);
+    }
+
+    :root:not(.light) .exp-card:hover {
+      border-color: var(--border-light);
+      transform: translateY(-2px);
     }
 
     :root.light .exp-card {
@@ -670,7 +773,12 @@
       border: 1px solid var(--border);
       border-radius: 6px;
       padding: 24px 28px;
-      transition: box-shadow 0.18s, transform 0.18s;
+      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), border-color 0.3s var(--ease);
+    }
+
+    :root:not(.light) .edu-card:hover {
+      border-color: var(--border-light);
+      transform: translateY(-2px);
     }
 
     :root.light .edu-card {
@@ -802,6 +910,91 @@
 
     .contact-val:hover { color: var(--accent); }
 
+    .contact-val.copied { color: var(--accent); }
+
+    /* interactive terminal */
+    .terminal {
+      margin-top: 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 2;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0 18px 14px;
+      max-height: 280px;
+      overflow-y: auto;
+      cursor: text;
+      transition: border-color 0.2s var(--ease);
+    }
+
+    #termHistory { padding-top: 6px; }
+
+    .terminal:focus-within { border-color: var(--border-light); }
+
+    :root.light .terminal { background: var(--surface); }
+
+    /* each "$ command" line sticks to the top while its output scrolls,
+       and the next command takes over the spot — like section headers */
+    #termHistory .term-line {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--bg);
+      padding: 10px 0 4px;
+    }
+
+    :root.light #termHistory .term-line { background: var(--surface); }
+
+    .term-prompt { color: var(--accent); user-select: none; }
+
+    .term-cmd { color: var(--text); }
+
+    .term-out {
+      color: var(--muted);
+      white-space: pre-wrap;
+      transition: opacity 0.4s ease;
+    }
+
+    .term-out a {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid var(--accent-dim);
+    }
+
+    .term-hint { color: var(--faint); }
+
+    .term-hl { color: var(--accent); }
+
+    .term-input-line {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .terminal.ready .term-input-line { display: flex; }
+
+    .term-input {
+      flex: 1;
+      min-width: 0;
+      font: inherit;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      padding: 0;
+      caret-color: var(--accent);
+    }
+
+    .term-input:focus-visible { outline: none; }
+
+    .term-input::placeholder {
+      color: var(--faint);
+      opacity: 0.8;
+      transition: opacity 0.2s ease;
+    }
+
+    /* placeholder only nudges when the prompt is idle — focused = just the caret */
+    .term-input:focus::placeholder { opacity: 0; }
+
     /* FOOTER */
     footer {
       border-top: 1px solid var(--border);
@@ -872,40 +1065,73 @@
 
     /* ── MOTION ── */
     @keyframes rise-in {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
     /* hero entrance — fast cascade, runs once */
-    .js .hero-eyebrow     { animation: rise-in 0.45s 0.05s ease both; }
-    .js .hero-role        { animation: rise-in 0.45s 0.18s ease both; }
-    .js .hero-bio         { animation: rise-in 0.45s 0.26s ease both; }
-    .js .hero-actions     { animation: rise-in 0.45s 0.34s ease both; }
-    .js .hero-avatar-wrap { animation: rise-in 0.5s  0.15s ease both; }
-    .js .hero-links       { animation: rise-in 0.45s 0.45s ease both; }
+    .js .hero-eyebrow     { animation: rise-in 0.6s 0.05s var(--ease) both; }
+    .js .hero-role        { animation: rise-in 0.6s 0.18s var(--ease) both; }
+    .js .hero-bio         { animation: rise-in 0.6s 0.26s var(--ease) both; }
+    .js .hero-actions     { animation: rise-in 0.6s 0.34s var(--ease) both; }
+    .js .hero-avatar-wrap { animation: rise-in 0.7s 0.15s var(--ease) both; }
+    .js .hero-links       { animation: rise-in 0.6s 0.45s var(--ease) both; }
 
-    /* scroll reveal — opacity only, so it never fights card hover lifts */
-    .js .reveal { opacity: 0; transition: opacity 0.55s ease; }
-    .js .reveal.visible { opacity: 1; }
+    /* scroll reveal — soft rise; JS strips the class after it settles so
+       reveal transitions never fight card hover lifts */
+    .js .reveal {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+    }
+    .js .reveal.visible { opacity: 1; transform: none; }
 
     /* section label dash draws in with its section */
-    .section-label::after { transition: width 0.6s ease 0.25s; }
+    .section-label::after { transition: width 0.7s var(--ease) 0.25s; }
     .js section:not(.visible) .section-label::after { width: 0; }
 
     /* micro-interactions */
-    .btn { transition: all 0.15s, transform 0.18s ease; }
-    .btn:hover { transform: translateY(-1px); }
+    .btn { transition: all 0.15s, transform 0.25s var(--ease); }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:active { transform: translateY(0) scale(0.98); }
 
     .nav-links a {
       background: linear-gradient(var(--accent), var(--accent)) left bottom / 0 1px no-repeat;
       padding-bottom: 3px;
-      transition: color 0.15s, background-size 0.22s ease;
+      transition: color 0.15s, background-size 0.3s var(--ease);
     }
 
     .nav-links a:hover { background-size: 100% 1px; }
 
-    .theme-toggle svg { transition: transform 0.35s ease; }
+    .nav-links a.active {
+      color: var(--text);
+      background-size: 100% 1px;
+    }
+
+    .theme-toggle svg { transition: transform 0.4s var(--ease); }
+    .theme-toggle:hover svg { transform: rotate(-12deg) scale(1.08); }
     .theme-toggle:active svg { transform: rotate(60deg); }
+
+    /* smooth theme switch — class is added for one beat on toggle */
+    :root.theming, :root.theming body, :root.theming nav,
+    :root.theming .skill-group, :root.theming .project-card,
+    :root.theming .exp-card, :root.theming .edu-card,
+    :root.theming .tag, :root.theming .btn-secondary {
+      transition: background-color 0.4s ease, color 0.4s ease,
+                  border-color 0.4s ease, box-shadow 0.4s ease !important;
+    }
+
+    /* avatar breathes slightly on hover */
+    .hero-avatar img { transition: transform 0.6s var(--ease); }
+    .hero-avatar:hover img { transform: scale(1.04); }
+
+    /* tag stagger — chips pop in one-by-one after their card reveals */
+    @keyframes tag-in {
+      from { opacity: 0; transform: translateY(4px) scale(0.95); }
+      to   { opacity: 1; transform: none; }
+    }
+    .js .tag-hidden { opacity: 0; }
+    .js .tag-pop { animation: tag-in 0.35s var(--ease) both; }
 
     /* MOBILE */
     @media (max-width: 600px) {
@@ -920,6 +1146,7 @@
       footer { padding: 20px 1.2rem; }
       .hero-avatar { width: 100px !important; height: 100px !important; }
       .theme-toggle { width: 40px; height: 40px; }
+      .term-input { font-size: 16px; } /* prevents iOS focus zoom */
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -929,7 +1156,9 @@
         transition: none !important;
       }
       .cursor { opacity: 1; }
-      .js .reveal { opacity: 1; }
+      .js .reveal { opacity: 1; transform: none; }
+      .js .tag-hidden { opacity: 1; }
+      .project-card::before { display: none; }
       .js section:not(.visible) .section-label::after { width: 48px; }
       :root.light.js section:not(.visible) .section-label::after { width: 120px; }
     }
@@ -1037,6 +1266,24 @@
         with a goal of working in AI engineering at a product company or startup. I teach C programming on the side — 
         explaining hard things simply is something I take seriously.
       </p>
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-value" data-count="4">4</span>
+          <span class="stat-label">years writing code</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" data-count="1">1</span>
+          <span class="stat-label">business running on my software daily</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" data-count="4">4</span>
+          <span class="stat-label">projects shipped end-to-end</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" data-count="10" data-suffix="+">10+</span>
+          <span class="stat-label">students taught C programming</span>
+        </div>
+      </div>
     </section>
 
     <div class="divider"></div>
@@ -1358,6 +1605,24 @@
       </div>
     </section>
 
+    <div class="divider"></div>
+
+    <!-- TERMINAL -->
+    <section id="terminal">
+      <h2 class="section-label">Terminal</h2>
+      <p class="contact-text">Prefer the command line? Same portfolio, more fun — this shell actually works.</p>
+      <div class="terminal" id="termBox">
+        <div id="termHistory">
+          <p class="term-line"><span class="term-prompt">$</span> <span class="term-cmd" id="termCmd">whoami</span></p>
+          <p class="term-out" id="termOut">muzamil ali — ai engineer &amp; full-stack dev · karachi, pk</p>
+        </div>
+        <p class="term-line term-input-line">
+          <span class="term-prompt">$</span>
+          <input class="term-input" id="termInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="try 'help'" aria-label="Portfolio terminal — type help and press Enter" />
+        </p>
+      </div>
+    </section>
+
   </main>
 
   <footer>
@@ -1369,14 +1634,24 @@
     const toggle = document.getElementById('themeToggle');
     const root = document.documentElement;
 
-    const savedTheme = localStorage.getItem('theme');
+    // localStorage can throw (private mode, storage blocked) — never let that kill the script
+    const store = {
+      get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+      set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }
+    };
+
+    const savedTheme = store.get('theme');
     if (savedTheme === 'light' || (!savedTheme && window.matchMedia('(prefers-color-scheme: light)').matches)) {
       root.classList.add('light');
     }
 
+    let themeTimer;
     toggle.addEventListener('click', () => {
+      root.classList.add('theming');
       root.classList.toggle('light');
-      localStorage.setItem('theme', root.classList.contains('light') ? 'light' : 'dark');
+      store.set('theme', root.classList.contains('light') ? 'light' : 'dark');
+      clearTimeout(themeTimer);
+      themeTimer = setTimeout(() => root.classList.remove('theming'), 450);
     });
 
     // Motion is opt-in via the js class — no-JS visitors see a fully static page.
@@ -1397,19 +1672,308 @@
       setTimeout(type, 350);
     }
 
-    // Scroll reveals: sections fade their parts in with a small stagger
+    // Cycling typewriter on the role line — the cursor hands off from the name
+    const roleEl = document.querySelector('.hero-role');
+    if (roleEl && !reduceMotion) {
+      const roles = ['AI Engineer', 'Full-Stack Developer', 'LLM Systems Builder'];
+      roleEl.innerHTML = '<span id="roleText"></span><span class="cursor role-cursor"></span>';
+      const roleText = document.getElementById('roleText');
+      let ri = 0;
+      const cycle = () => {
+        const word = roles[ri % roles.length];
+        let ci = 0;
+        const typeStep = setInterval(() => {
+          roleText.textContent = word.slice(0, ++ci);
+          if (ci === word.length) {
+            clearInterval(typeStep);
+            setTimeout(() => {
+              const delStep = setInterval(() => {
+                roleText.textContent = word.slice(0, --ci);
+                if (ci === 0) { clearInterval(delStep); ri++; setTimeout(cycle, 120); }
+              }, 26);
+            }, 2200);
+          }
+        }, 55);
+      };
+      setTimeout(() => {
+        // fade out the name's cursor so only one cursor lives at a time
+        const nameCursor = document.querySelector('.hero-name .cursor');
+        if (nameCursor) {
+          nameCursor.style.transition = 'opacity 0.3s ease';
+          nameCursor.style.animation = 'none';
+          nameCursor.style.opacity = '0';
+        }
+        cycle();
+      }, 1400);
+    }
+
+    // Scroll reveals: sections rise their parts in with a small stagger
     const sections = document.querySelectorAll('main section:not(#hero)');
     sections.forEach((sec) => {
       sec.querySelectorAll(
-        '.section-label, .about-text, .contact-text, .contact-links'
+        '.section-label, .about-text, .stats-row, .contact-text, .contact-links, ' +
+        '.skill-group, .project-card, .exp-card, .edu-card, .terminal'
       ).forEach((el) => el.classList.add('reveal'));
+      if (!reduceMotion) {
+        sec.querySelectorAll('.tag').forEach((t) => t.classList.add('tag-hidden'));
+      }
     });
+
+    // Count-up stats — numbers ease from 0 to their real value
+    const animateStats = (sec) => {
+      sec.querySelectorAll('.stat-value').forEach((el) => {
+        const target = parseInt(el.dataset.count, 10);
+        const suffix = el.dataset.suffix || '';
+        if (reduceMotion || isNaN(target)) return;
+        const start = performance.now();
+        const dur = 1100;
+        const tick = (now) => {
+          const p = Math.min((now - start) / dur, 1);
+          const eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = Math.round(target * eased) + suffix;
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      });
+    };
+
+    // Interactive terminal — auto-types "whoami", then hands the prompt to the visitor
+    const terminal = document.getElementById('termBox');
+    const termHistory = document.getElementById('termHistory');
+    const termCmd = document.getElementById('termCmd');
+    const termOut = document.getElementById('termOut');
+    const termInput = document.getElementById('termInput');
+
+    const termPrint = (line, cls) => {
+      const p = document.createElement('p');
+      p.className = cls || 'term-out';
+      p.textContent = line;
+      termHistory.appendChild(p);
+    };
+
+    const termEcho = (cmd) => {
+      const p = document.createElement('p');
+      p.className = 'term-line';
+      const prompt = document.createElement('span');
+      prompt.className = 'term-prompt';
+      prompt.textContent = '$';
+      const c = document.createElement('span');
+      c.className = 'term-cmd';
+      c.textContent = ' ' + cmd;
+      p.append(prompt, c);
+      termHistory.appendChild(p);
+      return p;
+    };
+
+    const TERM_CMDS = {
+      help: () => [
+        'available commands:',
+        '  whoami       who is this guy',
+        '  why-hire-me  the pitch, in 4 lines',
+        '  projects     what he has built',
+        '  skills       what he works with',
+        '  contact      how to reach him',
+        '  email        copy the email address',
+        '  cv           grab the resume',
+        '  github       open the github profile',
+        '  linkedin     open the linkedin profile',
+        '  open <x>     jump to a section (try: open projects)',
+        '  neofetch     system info, sort of',
+        '  joke         one dev joke, on the house',
+        '  theme        toggle dark / light',
+        '  history      what you typed',
+        '  clear        clean the screen',
+        'psst — a few commands are not listed here 👀',
+      ],
+      whoami: () => ['muzamil ali — ai engineer & full-stack dev · karachi, pk'],
+      projects: () => [
+        'tulip-erp        full-stack ERP for an RO water plant  [featured]',
+        'smart-distiller  LLM pipeline — 45 min triage → 30 s',
+        'notesflow        notes app with flexible auth (email/user/phone)',
+        'pong             real-time networked C++ game @ 60 FPS',
+        "run 'open projects' for the full stories",
+      ],
+      skills: () => [
+        'ai/llm    openai api · prompt engineering · n8n workflows',
+        'backend   fastapi · python · sqlalchemy · postgresql',
+        'frontend  react · vite · tailwind css',
+        'langs     python · javascript · c++ · c · sql',
+      ],
+      contact: () => [
+        'email     me@muzamilali.online',
+        'github    github.com/MUZAMILALISULEMAN',
+        'linkedin  linkedin.com/in/muzamil-ali-b771aa356',
+      ],
+      cv: () => { window.open('cv.pdf', '_blank'); return ['opening cv.pdf …']; },
+      theme: () => {
+        toggle.click();
+        return ['theme switched to ' + (root.classList.contains('light') ? 'light' : 'dark')];
+      },
+      clear: () => {
+        termHistory.innerHTML = '';
+        const hint = document.createElement('p');
+        hint.className = 'term-out term-hint';
+        hint.innerHTML = 'screen cleared — type <span class="term-hl">help</span> whenever you\'re ready';
+        termHistory.appendChild(hint);
+        return [];
+      },
+      open: (arg) => {
+        const target = document.getElementById(arg || '');
+        if (target && target.tagName === 'SECTION') {
+          target.scrollIntoView();
+          return ['navigating to ' + arg + ' …'];
+        }
+        return ["can't open '" + (arg || '') + "' — sections: about · skills · projects · experience · education · contact · terminal"];
+      },
+      ls: () => ['about  skills  projects  experience  education  contact  terminal'],
+      pwd: () => ['/home/muzamil/portfolio'],
+      sudo: () => ['nice try. this incident will be reported.'],
+      hello: () => ['hey there 👋 — type help to explore'],
+      hi: () => ['hey there 👋 — type help to explore'],
+      'why-hire-me': () => [
+        '1. ships real things — an ERP a business runs on daily, not todo apps',
+        '2. ai-native — builds llm pipelines & agent workflows at agento',
+        '3. full-stack — fastapi to react, database to deploy',
+        '4. explains hard things simply — teaches C on the side',
+        "convinced? run 'contact'",
+      ],
+      github: () => { window.open('https://github.com/MUZAMILALISULEMAN', '_blank'); return ['opening github …']; },
+      linkedin: () => { window.open('https://www.linkedin.com/in/muzamil-ali-b771aa356', '_blank'); return ['opening linkedin …']; },
+      email: () => {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText('me@muzamilali.online').catch(() => {});
+          return ['me@muzamilali.online → copied to clipboard ✓'];
+        }
+        return ['me@muzamilali.online'];
+      },
+      history: () => termHist.length ? termHist.map((c, i) => '  ' + (i + 1) + '  ' + c) : ['no history yet'],
+      date: () => [new Date().toString()],
+      echo: (arg, rest) => [rest || ''],
+      joke: () => {
+        const jokes = [
+          'why do programmers prefer dark mode? because light attracts bugs.',
+          "there are 10 kinds of people: those who understand binary and those who don't.",
+          '!false — it\'s funny because it\'s true.',
+          "a SQL query walks into a bar, walks up to two tables and asks: 'can i join you?'",
+          'i would tell you a UDP joke, but you might not get it.',
+        ];
+        return [jokes[Math.floor(Math.random() * jokes.length)]];
+      },
+      neofetch: () => [
+        '      ▲        muzamil@portfolio',
+        '     ▲ ▲       -----------------',
+        '    ▲   ▲      role:   ai engineer & full-stack dev',
+        '   ▲  ▲  ▲     edu:    fast-nuces karachi ’28',
+        '  ▲ ▲   ▲ ▲    work:   intern @ agento',
+        '               stack:  python · react · fastapi · postgres',
+        '               uptime: 3rd year and counting',
+      ],
+      matrix: () => {
+        if (terminal.dataset.matrix) return ['already in the matrix.'];
+        terminal.dataset.matrix = '1';
+        let n = 0;
+        const rain = setInterval(() => {
+          let line = '';
+          for (let k = 0; k < 34; k++) line += Math.random() > 0.5 ? '1' : '0';
+          termPrint(line, 'term-out term-hl');
+          terminal.scrollTop = terminal.scrollHeight;
+          if (++n === 9) {
+            clearInterval(rain);
+            termPrint('wake up, neo…', 'term-out term-hl');
+            terminal.scrollTop = terminal.scrollHeight;
+            delete terminal.dataset.matrix;
+          }
+        }, 110);
+        return [];
+      },
+      coffee: () => ['   ( (', '    ) )', '  ........', '  |      |]', '  \\      /', '   `----´   c[_] here, you probably need this more than i do'],
+      cat: () => ['meow. (try ‘cv’ if you wanted the pdf)'],
+      exit: () => ['there is no escape. try ‘help’ instead.'],
+    };
+
+    const termHist = [];
+    let termHistIdx = 0;
+
+    if (termInput) {
+      termInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          const raw = termInput.value.trim();
+          termInput.value = '';
+          if (!raw) return;
+          const echoEl = termEcho(raw);
+          const parts = raw.toLowerCase().split(/\s+/);
+          const rest = raw.includes(' ') ? raw.slice(raw.indexOf(' ') + 1) : '';
+          const fn = TERM_CMDS[parts[0]];
+          if (fn) fn(parts[1], rest).forEach((l) => termPrint(l));
+          else termPrint("command not found: " + parts[0] + " — try 'help'");
+          termHist.push(raw);
+          termHistIdx = termHist.length;
+          while (termHistory.children.length > 60) termHistory.removeChild(termHistory.firstChild);
+          // pin the command you just ran to the top of the box, so output reads top-down
+          terminal.scrollTop += echoEl.getBoundingClientRect().top - terminal.getBoundingClientRect().top;
+        } else if (e.key === 'ArrowUp') {
+          if (termHistIdx > 0) { termInput.value = termHist[--termHistIdx]; e.preventDefault(); }
+        } else if (e.key === 'ArrowDown') {
+          if (termHistIdx < termHist.length - 1) { termInput.value = termHist[++termHistIdx]; }
+          else { termHistIdx = termHist.length; termInput.value = ''; }
+          e.preventDefault();
+        }
+      });
+      // typing again brings the prompt back into view
+      termInput.addEventListener('input', () => {
+        terminal.scrollTop = terminal.scrollHeight;
+      });
+      terminal.addEventListener('click', () => termInput.focus());
+    }
+
+    const termReady = () => {
+      const hint = document.createElement('p');
+      hint.className = 'term-out term-hint';
+      hint.innerHTML = 'type <span class="term-hl">help</span> and press enter — this thing actually works';
+      termHistory.appendChild(hint);
+      terminal.classList.add('ready');
+    };
+
+    if (termCmd && !reduceMotion) {
+      termCmd.textContent = '';
+      termOut.style.opacity = '0';
+    }
+
+    const runTerminal = () => {
+      if (!termCmd || termCmd.dataset.ran) return;
+      termCmd.dataset.ran = '1';
+      if (reduceMotion) { termReady(); return; }
+      const cmd = 'whoami';
+      let i = 0;
+      const t = setInterval(() => {
+        termCmd.textContent = cmd.slice(0, ++i);
+        if (i === cmd.length) {
+          clearInterval(t);
+          setTimeout(() => {
+            termOut.style.opacity = '1';
+            setTimeout(termReady, 500);
+          }, 350);
+        }
+      }, 85);
+    };
 
     const show = (sec) => {
       sec.classList.add('visible');
       sec.querySelectorAll('.reveal').forEach((el, i) => {
-        setTimeout(() => el.classList.add('visible'), reduceMotion ? 0 : i * 70);
+        const delay = reduceMotion ? 0 : i * 70;
+        setTimeout(() => el.classList.add('visible'), delay);
+        // strip reveal classes once settled so hover lifts use their own timing
+        setTimeout(() => el.classList.remove('reveal', 'visible'), delay + 700);
+        // chips pop in one-by-one shortly after their card lands
+        el.querySelectorAll('.tag-hidden').forEach((t, j) => {
+          setTimeout(() => {
+            t.classList.remove('tag-hidden');
+            t.classList.add('tag-pop');
+          }, delay + 200 + j * 30);
+        });
       });
+      if (sec.querySelector('.stat-value')) animateStats(sec);
+      if (sec.querySelector('.terminal')) setTimeout(runTerminal, reduceMotion ? 0 : 600);
     };
 
     if (reduceMotion || !('IntersectionObserver' in window)) {
@@ -1424,6 +1988,67 @@
         });
       }, { threshold: 0.1 });
       sections.forEach((sec) => io.observe(sec));
+    }
+
+    // Nav condenses after scrolling past the top
+    const navEl = document.querySelector('nav');
+    let navTick = false;
+    const paintNav = () => {
+      navEl.classList.toggle('scrolled', window.scrollY > 24);
+      navTick = false;
+    };
+    window.addEventListener('scroll', () => {
+      if (!navTick) { requestAnimationFrame(paintNav); navTick = true; }
+    }, { passive: true });
+    paintNav();
+
+    // Scrollspy: highlight the nav link for the section in view
+    const navLinks = document.querySelectorAll('.nav-links a');
+    const linkFor = {};
+    navLinks.forEach((a) => { linkFor[a.getAttribute('href').slice(1)] = a; });
+    if ('IntersectionObserver' in window) {
+      const spy = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const link = linkFor[entry.target.id];
+          if (!link) return;
+          if (entry.isIntersecting) {
+            navLinks.forEach((a) => a.classList.remove('active'));
+            link.classList.add('active');
+          }
+        });
+      }, { rootMargin: '-40% 0px -55% 0px' });
+      document.querySelectorAll('main section[id]').forEach((sec) => spy.observe(sec));
+    }
+
+    // Copy email on click — falls back to mailto if the clipboard is blocked
+    const emailLink = document.querySelector('#contact a[href^="mailto"]');
+    if (emailLink && navigator.clipboard) {
+      const original = emailLink.textContent;
+      emailLink.title = 'Click to copy';
+      let copyTimer;
+      emailLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigator.clipboard.writeText(original).then(() => {
+          emailLink.textContent = 'copied ✓';
+          emailLink.classList.add('copied');
+          clearTimeout(copyTimer);
+          copyTimer = setTimeout(() => {
+            emailLink.textContent = original;
+            emailLink.classList.remove('copied');
+          }, 1600);
+        }).catch(() => { window.location.href = emailLink.href; });
+      });
+    }
+
+    // Cursor-tracking glow on project cards
+    if (!reduceMotion && matchMedia('(hover: hover)').matches) {
+      document.querySelectorAll('.project-card').forEach((card) => {
+        card.addEventListener('mousemove', (e) => {
+          const r = card.getBoundingClientRect();
+          card.style.setProperty('--mx', `${e.clientX - r.left}px`);
+          card.style.setProperty('--my', `${e.clientY - r.top}px`);
+        });
+      });
     }
   </script>
   </body>
