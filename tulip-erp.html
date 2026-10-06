@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tulip ERP — putting the domain model in the database · Muzamil Ali</title>
+<meta name="description" content="How I built a production ERP for an RO water plant with the business logic in PostgreSQL — billing snapshots, trigger-driven audit attribution, transactional dispatch, and what I'd do differently." />
+<link rel="canonical" href="https://www.muzamilali.online/tulip-erp.html" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://www.muzamilali.online/tulip-erp.html" />
+<meta property="og:title" content="Tulip ERP — putting the domain model in the database" />
+<meta property="og:description" content="A production ERP for an RO water plant, with the business logic in PostgreSQL. The decisions, the trade-offs, and what I'd change." />
+<meta property="og:image" content="https://www.muzamilali.online/pp2.jpg" />
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<style>
+  /* Tokens are a copy of the portfolio's — same names, same values, so the
+     two pages stay in step and the theme toggle means the same thing here. */
+  :root {
+    --bg: #0A0A0A;
+    --surface: #111111;
+    --border: #1E1E1E;
+    --border-light: #2A2A2A;
+    --text: #F0F0F0;
+    --text-soft: #C4C4C4;
+    --muted: #888888;
+    --faint: #444444;
+    --accent: #4ADE80;
+    --accent-dim: #16532a;
+    --chip: #1A1A1A;
+    --nav-bg: rgba(10, 10, 10, 0.92);
+    --shadow-card: none;
+    --shadow-hover: none;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  :root.light {
+    --bg: #F5F0E8;
+    --surface: #FDFAF5;
+    --border: #E5DDD0;
+    --border-light: #D8CFBF;
+    --text: #2E2A25;
+    --text-soft: #4A443C;
+    --muted: #6B6258;
+    --faint: #B5ADA2;
+    --accent: #2D7A4F;
+    --accent-dim: #D4EDE1;
+    --chip: #EFE9DE;
+    --nav-bg: rgba(245, 240, 232, 0.93);
+    --shadow-card: 0 2px 10px rgba(80,50,10,0.06), 0 1px 3px rgba(80,50,10,0.04);
+    --shadow-hover: 0 8px 28px rgba(80,50,10,0.10), 0 2px 8px rgba(80,50,10,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection { background: var(--accent); color: #0A0A0A; }
+  :root.light ::selection { color: #FDFAF5; }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: var(--nav-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+  }
+
+  .nav-back {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s var(--ease);
+  }
+
+  .nav-back:hover { color: var(--accent); }
+  .nav-back .arrow { transition: transform 0.2s var(--ease); display: inline-block; }
+  .nav-back:hover .arrow { transform: translateX(-3px); }
+
+  .theme-toggle {
+    background: none;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--muted);
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    flex-shrink: 0;
+    padding: 0;
+  }
+
+  .theme-toggle:hover { color: var(--text); border-color: var(--faint); background: var(--surface); }
+  .theme-toggle svg { width: 14px; height: 14px; fill: currentColor; }
+  .icon-moon { display: block; }
+  .icon-sun  { display: none; }
+  :root.light .icon-moon { display: none; }
+  :root.light .icon-sun  { display: block; }
+
+  /* LAYOUT — narrower than the portfolio: this is prose, not cards */
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 2rem 110px;
+  }
+
+  /* HEADER */
+  .cs-header { padding: 118px 0 0; }
+
+  .cs-eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .cs-eyebrow::after {
+    content: '';
+    height: 1px;
+    width: 48px;
+    background: var(--accent-dim);
+  }
+
+  .cs-title {
+    font-family: var(--mono);
+    font-size: clamp(26px, 4.4vw, 36px);
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin-bottom: 22px;
+  }
+
+  /* the facts a reader checks before deciding to read on */
+  .cs-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    padding: 16px 0 18px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .cs-meta b { color: var(--text-soft); font-weight: 500; }
+
+  .cs-lede {
+    margin-top: 30px;
+    font-size: 16.5px;
+    line-height: 1.75;
+    color: var(--text-soft);
+  }
+
+  /* HEADLINE RESULT */
+  .cs-result {
+    margin: 34px 0 10px;
+    padding: 22px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .cs-result-metric {
+    font-family: var(--mono);
+    font-size: clamp(20px, 3.4vw, 26px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .cs-result-metric .to { font-weight: 400; }
+
+  .cs-result-caption {
+    margin-top: 7px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* BODY */
+  h2 {
+    font-family: var(--mono);
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 64px 0 18px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+    scroll-margin-top: 80px;
+  }
+
+  h3 {
+    font-family: var(--mono);
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--text);
+    margin: 40px 0 14px;
+  }
+
+  p { margin-bottom: 18px; color: var(--text-soft); }
+
+  main > p:last-child { margin-bottom: 0; }
+
+  strong { color: var(--text); font-weight: 600; }
+
+  em { color: var(--text); font-style: italic; }
+
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-dim); }
+  a:hover { border-bottom-color: var(--accent); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--chip);
+    border-radius: 3px;
+    padding: 2px 5px;
+    color: var(--text);
+  }
+
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 18px 20px;
+    overflow-x: auto;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow-card);
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    /* sized so the widest line (the billing CASE) fits the column unscrolled */
+    font-size: 11.8px;
+    line-height: 1.75;
+    color: var(--text-soft);
+    white-space: pre;
+  }
+
+  /* comments and keywords, picked out by hand — no highlighter library */
+  pre .c { color: var(--faint); font-style: italic; }
+  pre .k { color: var(--accent); }
+
+  /* a point that deserves to stop the eye */
+  .cs-callout {
+    border-left: 2px solid var(--accent);
+    padding: 2px 0 2px 20px;
+    margin: 0 0 22px;
+    color: var(--text-soft);
+  }
+
+  .cs-callout p:last-child { margin-bottom: 0; }
+
+  /* STACK */
+  .cs-stack { margin-top: 10px; }
+
+  .cs-stack-row {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 16px;
+    align-items: baseline;
+    padding: 13px 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .cs-stack-row:last-child { border-bottom: 1px solid var(--border); }
+
+  .cs-stack-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .cs-stack-items { font-size: 13.5px; color: var(--muted); }
+
+  /* FOOT */
+  .cs-foot {
+    margin-top: 64px;
+    padding-top: 30px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 20px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .cs-foot-note { font-size: 13px; color: var(--muted); }
+
+  .cs-foot-links { display: flex; flex-wrap: wrap; gap: 18px; }
+
+  .cs-foot-links a {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--muted);
+    border-bottom: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cs-foot-links a:hover { color: var(--accent); }
+  .cs-foot-links svg { width: 13px; height: 13px; fill: currentColor; }
+
+  @media (max-width: 600px) {
+    nav { padding: 0 1.2rem; }
+    main { padding: 0 1.2rem 80px; }
+    .cs-header { padding-top: 96px; }
+    .cs-stack-row { grid-template-columns: 1fr; gap: 6px; }
+    .theme-toggle { width: 40px; height: 40px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  a:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+</style>
+</head>
+
+<body>
+
+<nav>
+  <a class="nav-back" href="index.html#projects"><span class="arrow">←</span> Muzamil Ali</a>
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode">
+    <svg class="icon-moon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/>
+      <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.2" y1="4.2" x2="5.6" y2="5.6"/><line x1="18.4" y1="18.4" x2="19.8" y2="19.8"/>
+      <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.2" y1="19.8" x2="5.6" y2="18.4"/><line x1="18.4" y1="5.6" x2="19.8" y2="4.2"/>
+    </svg>
+  </button>
+</nav>
+
+<main>
+
+  <header class="cs-header">
+    <p class="cs-eyebrow">Case study</p>
+    <h1 class="cs-title">Tulip ERP — putting the domain model in the database</h1>
+
+    <div class="cs-meta">
+      <span>Role <b>Sole developer</b></span>
+      <span>Duration <b>Feb – May 2026</b></span>
+      <span>Status <b>Live in production</b></span>
+    </div>
+
+    <p class="cs-lede">
+      A water plant in Karachi delivers bottled RO water to about a hundred regular customers.
+      Every morning someone wrote the day's deliveries onto a paper sheet, and at month end
+      someone else added those sheets up by hand to work out who owed what. The dispatch sheet
+      took around twenty minutes to prepare; the monthly billing reconciliation took considerably
+      longer, and was the part that actually went wrong.
+    </p>
+
+    <div class="cs-result">
+      <p class="cs-result-metric">20 min <span class="to">→</span> under 5 min</p>
+      <p class="cs-result-caption">daily dispatch preparation · the plant has run on this software every day since</p>
+    </div>
+  </header>
+
+  <h2>The decision that shaped everything</h2>
+
+  <p>
+    Almost all the business logic lives in PL/pgSQL, not Python. The FastAPI layer is a thin
+    HTTP-to-<code>CALL</code> adapter; most endpoints are a single line:
+  </p>
+
+<pre><code>cursor.execute("call schema_sales.add_sales(%s)", (sale.model_dump_json(),))</code></pre>
+
+  <p>
+    Procedures take one <code>jsonb</code> argument and unpack it internally, so partial updates
+    work without building SQL strings. <code>update_customer</code> uses the <code>?</code>
+    containment operator to tell “field absent” apart from “field explicitly null”, then
+    <code>COALESCE(v_new, existing)</code> in the <code>SET</code> list — a partial update with no
+    dynamic SQL anywhere.
+  </p>
+
+  <div class="cs-callout">
+    <p>
+      <strong>Why.</strong> Three things write to this database: the API, the seed scripts, and me
+      in <code>psql</code> at 1am when something needs fixing. Rules enforced in Python only hold
+      for the first one. Putting the invariants in the database means they hold for all three,
+      and they cannot be bypassed by a future caller I haven't written yet.
+    </p>
+  </div>
+
+  <p>
+    <strong>What it cost.</strong> Validation errors arrive as a database round-trip instead of a
+    fast 422, and the Pydantic models ended up as little more than shape declarations — which
+    makes the Python layer misleading to read, because it looks like it validates and doesn't.
+    If I were starting again I'd mirror the cheap checks (ranges, enums, required fields) in
+    Pydantic for fast feedback and keep the database as the authority, rather than treating it
+    as either/or.
+  </p>
+
+  <h2>Three pieces of domain logic I'm glad I got right</h2>
+
+  <h3>1. Bills are snapshots, not live sums</h3>
+
+  <p>
+    The naive version recomputes a month's bill from current sales every time you look at it.
+    That's wrong: delete a sale from March and March's history silently changes. But freezing too
+    early is also wrong — a sale added after the bill was generated would never get charged.
+  </p>
+
+  <p>The resolution is three-way:</p>
+
+<pre><code><span class="k">CASE</span>
+    <span class="k">WHEN</span> bfm.amt    <span class="k">IS NULL</span>  <span class="k">THEN</span> COALESCE(sfm.amt, 0)   <span class="c">-- no bill yet: live total</span>
+    <span class="k">WHEN</span> bfm.status = 'paid' <span class="k">THEN</span> bfm.amt                <span class="c">-- paid: frozen for good</span>
+    <span class="k">ELSE</span> GREATEST(bfm.amt, COALESCE(sfm.amt, 0))         <span class="c">-- unpaid: new sales count,</span>
+<span class="k">END</span>                                                      <span class="c">-- deletions never do</span></code></pre>
+
+  <p>
+    <code>GREATEST</code> is the load-bearing word. It makes the number move in one direction
+    only, which is the behaviour the plant owner actually needs.
+  </p>
+
+  <h3>2. Cash sales must survive a billing reversal</h3>
+
+  <p>
+    A sale paid in cash at the counter and a sale paid through the monthly bill are both
+    <code>status = 'paid'</code>, but they are not the same thing. If the owner reverses a month's
+    billing, the counter sales must not be dragged back to unpaid.
+  </p>
+
+  <p>
+    I added a <code>billing_locked</code> flag maintained by two <code>BEFORE</code> triggers:
+    anything inserted or updated to <code>paid</code> gets locked. The billing module, which
+    legitimately needs to override that, sets a transaction-local flag its own trigger checks:
+  </p>
+
+<pre><code><span class="k">IF</span> current_setting('app.skip_billing_lock', <span class="k">true</span>) = 'on' <span class="k">THEN</span>
+    <span class="k">RETURN</span> NEW;
+<span class="k">END IF</span>;</code></pre>
+
+  <p>
+    So a human clicking “paid” in the UI locks the row permanently; the billing module flipping
+    the same column leaves it reversible. Same column, same trigger, different meaning depending
+    on who is writing — and the distinction is enforced rather than remembered.
+  </p>
+
+  <h3>3. Audit attribution without touching every UPDATE</h3>
+
+  <p>
+    Every row records who last changed it. Rather than threading <code>modified_by</code> through
+    a dozen <code>UPDATE</code> statements, each procedure sets a transaction-local GUC once:
+  </p>
+
+<pre><code><span class="k">PERFORM</span> set_config('app.user_id', v_user_id::text, <span class="k">true</span>);</code></pre>
+
+  <p>
+    and a single trigger on <code>customers</code>, <code>sales</code> and <code>bills</code>
+    stamps <code>modified_at</code> and <code>modified_by</code> from it. The <code>true</code>
+    matters — it scopes the setting to the transaction, so it can't leak across a pooled
+    connection into someone else's request.
+  </p>
+
+  <h2>Dispatch, and the one place atomicity is load-bearing</h2>
+
+  <p>
+    The daily dispatch writes a lock row plus one sale per customer — about forty inserts. If
+    insert thirty fails validation, a half-dispatched day is worse than no dispatch: the lock says
+    “done”, the sales say otherwise, and nobody can tell which customers were recorded.
+  </p>
+
+  <p>
+    One transaction per HTTP request, opened by a generator dependency that commits only after
+    the handler returns:
+  </p>
+
+<pre><code><span class="k">def</span> GET_DB():
+    connection = connect(**DB_CONFIG)
+    cursor = connection.cursor()
+    <span class="k">yield</span> cursor
+    connection.commit()</code></pre>
+
+  <p>
+    A <code>RAISE EXCEPTION</code> on any sale rolls back the lock row with it. The day stays
+    unlocked and the operator retries cleanly.
+  </p>
+
+  <p>
+    Elsewhere I leaned on constraints rather than locks. <code>send_bills_for_month</code> uses
+    <code>INSERT ... ON CONFLICT DO NOTHING RETURNING bill_id</code> inside a CTE and counts the
+    rows returned, so “send all bills” is safely re-clickable and honestly reports how many were
+    actually new. The uniqueness guarantee is
+    <code>UNIQUE (cust_id, bill_month, bill_year)</code> — the database refuses the duplicate, so
+    the application never has to check for one.
+  </p>
+
+  <h2>What I'd change</h2>
+
+  <p>
+    Writing this up made the gaps obvious, and they're more interesting than the parts that went
+    well.
+  </p>
+
+  <h3>Indexing, and the reason indexes wouldn't have helped</h3>
+
+  <p>
+    There isn't a single <code>CREATE INDEX</code> in the migration set. Worse, adding one
+    wouldn't have fixed much, because every hot predicate is non-sargable —
+    <code>created_at::date = now()::date</code>,
+    <code>EXTRACT(MONTH FROM created_at) = p_month</code>,
+    <code>date_trunc('month', created_at)</code>. Wrapping the column in a function means Postgres
+    can't use an index on it at all, so every stats and billing read is a sequential scan. The fix
+    is to rewrite them as half-open ranges
+    (<code>created_at &gt;= $1 AND created_at &lt; $1 + interval '1 month'</code>) <em>and then</em>
+    index <code>(created_at)</code> and <code>(cust_id, created_at)</code>. At a hundred customers
+    the plant will never notice; at ten thousand rows a month it would be the first thing to fall
+    over. I learned the difference between “has an index” and “can use an index” from this.
+  </p>
+
+  <h3>The migration set can't rebuild the database</h3>
+
+  <p>
+    One SQL file is entirely commented out while the API still calls the functions it defines, and
+    the <code>sales</code> table DDL is truncated mid-statement. The functions are live in
+    production because I created them there, so everything works — but a clean rebuild from the
+    repo produces an app that 500s. For a project whose whole premise is “the logic lives in
+    Postgres”, that's the most serious structural flaw in it: the logic isn't actually in version
+    control, it's in a server. Numbered, idempotent, tested-from-scratch migrations are the fix,
+    and it's the first thing I'd do differently.
+  </p>
+
+  <h3>Dispatch is N+1 by design</h3>
+
+  <p>
+    Forty customers means forty <code>CALL</code> round trips. Passing a <code>jsonb</code> array
+    and looping server-side would make it one.
+  </p>
+
+  <h3>Concurrency has a real hole</h3>
+
+  <p>
+    The “already dispatched today” check is a separate request from the dispatch itself, and the
+    dispatch log has no unique constraint on the date — so two tabs, or one fast double-click,
+    dispatches twice. The guard is client-side UI state, which is not a guard. A unique index on
+    <code>(dispatched_at::date)</code> closes it in one line. It's a textbook time-of-check /
+    time-of-use race and I shipped it without seeing it.
+  </p>
+
+  <h2>Stack</h2>
+
+  <div class="cs-stack">
+    <div class="cs-stack-row">
+      <span class="cs-stack-label">Backend</span>
+      <span class="cs-stack-items">FastAPI · psycopg2 (raw SQL, no ORM) · Pydantic · loguru</span>
+    </div>
+    <div class="cs-stack-row">
+      <span class="cs-stack-label">Database</span>
+      <span class="cs-stack-items">PostgreSQL — 5 schemas, ~25 stored procedures and functions, 3 triggers</span>
+    </div>
+    <div class="cs-stack-row">
+      <span class="cs-stack-label">Frontend</span>
+      <span class="cs-stack-items">React · Vite</span>
+    </div>
+    <div class="cs-stack-row">
+      <span class="cs-stack-label">Auth</span>
+      <span class="cs-stack-items">passlib · bcrypt</span>
+    </div>
+  </div>
+
+  <div class="cs-foot">
+    <p class="cs-foot-note">Written by Muzamil Ali</p>
+    <div class="cs-foot-links">
+      <a href="https://github.com/M-uzamilAli/WATER_PLANT_FULL_STACK_APP" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+        Repository
+      </a>
+      <a href="index.html#projects">← All projects</a>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  // Same theme contract as the portfolio: the 'light' class on <html>, the
+  // 'theme' key in localStorage — so the choice carries between pages.
+  const toggle = document.getElementById('themeToggle');
+  const root = document.documentElement;
+
+  const store = {
+    get: (k) => { try { return localStorage.getItem(k); } catch { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch {} }
+  };
+
+  const savedTheme = store.get('theme');
+  if (savedTheme === 'light' || (!savedTheme && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+    root.classList.add('light');
+  }
+
+  toggle.addEventListener('click', () => {
+    root.classList.toggle('light');
+    store.set('theme', root.classList.contains('light') ? 'light' : 'dark');
+  });
+</script>
+
+</body>
+</html>
