@@ -456,6 +456,38 @@
     }
 
     /* SKILLS */
+    /* core strengths — highlighted above the full breakdown */
+    .skills-core {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .core-skill {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-left: 2px solid var(--accent);
+      border-radius: 4px;
+      padding: 8px 14px;
+      transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+    }
+
+    .core-skill:hover { color: var(--accent); }
+
+    .skills-sub-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 30px 0 14px;
+    }
+
     .skills-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -722,6 +754,70 @@
       display: flex;
       flex-wrap: wrap;
       gap: 5px;
+    }
+
+    /* project screenshot / preview slot */
+    .project-figure {
+      aspect-ratio: 16 / 9;
+      margin-bottom: 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .project-figure img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* intentional placeholder until a real screenshot is dropped in —
+       compact banner now; swapping in an <img> restores the full 16:9 */
+    .project-figure.is-placeholder {
+      aspect-ratio: auto;
+      height: 118px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent 55%),
+        repeating-linear-gradient(45deg, var(--surface) 0 11px, var(--bg) 11px 22px);
+    }
+
+    .project-figure .ph-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      padding: 5px 11px;
+    }
+
+    /* impact row — numbers + results, read first */
+    .project-impact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-bottom: 14px;
+    }
+
+    .impact-stat {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      padding: 4px 9px;
+      line-height: 1.5;
+    }
+
+    .impact-stat b {
+      color: var(--accent);
+      font-weight: 700;
     }
 
     /* EXPERIENCE */
@@ -1300,15 +1396,14 @@
           <h1 class="hero-name">Muzamil Ali<span class="cursor"></span></h1>
           <p class="hero-role"><span>AI Engineer</span> &amp; Full-Stack Developer</p>
           <p class="hero-bio">
-            CS student at <strong>FAST-NUCES Karachi</strong> building real systems — not tutorials.
-            Currently interning at <strong><a class="company-link" href="https://www.linkedin.com/company/agentoau" target="_blank" rel="noopener">Agento</a></strong>, where I build AI agent workflows and LLM-powered
-            features. I ship full-stack applications, integrate LLMs into production pipelines, and design
-            backends that don't break under real business logic.
+            I build production systems, not tutorials — a full-stack ERP a <strong>real business runs every day</strong>,
+            LLM pipelines, and shipped desktop tools. CS @ <strong>FAST-NUCES</strong>, currently building
+            agentic AI at <strong><a class="company-link" href="https://www.linkedin.com/company/agentoau" target="_blank" rel="noopener">Agento</a></strong>.
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary" href="#projects">View Projects</a>
             <a class="btn btn-secondary" href="#contact">Get in Touch</a>
-            <a class="btn btn-secondary" >Download CV</a>
+            <a class="btn btn-secondary" href="cv.pdf" target="_blank" rel="noopener">Download CV</a>
           </div>
         </div>
 
@@ -1377,6 +1472,20 @@
     <!-- SKILLS -->
     <section id="skills">
       <h2 class="section-label">Skills</h2>
+
+      <div class="skills-core">
+        <span class="core-skill">Python</span>
+        <span class="core-skill">FastAPI</span>
+        <span class="core-skill">React</span>
+        <span class="core-skill">PostgreSQL</span>
+        <span class="core-skill">LLM Integration</span>
+        <span class="core-skill">TypeScript</span>
+        <span class="core-skill">Electron</span>
+        <span class="core-skill">Git &amp; Agile</span>
+      </div>
+
+      <p class="skills-sub-label">Full breakdown</p>
+
       <div class="skills-grid">
 
         <div class="skill-group">
@@ -1470,6 +1579,9 @@
       <div class="projects-list">
 
         <div class="project-card featured">
+          <div class="project-figure is-placeholder">
+            <span class="ph-label">Tulip ERP — dashboard</span>
+          </div>
           <div class="project-header">
             <h3 class="project-name">
               Tulip ERP — RO Water Plant Management System
@@ -1482,11 +1594,15 @@
               </a>
             </div>
           </div>
+          <div class="project-impact">
+            <span class="impact-stat">Dispatch <b>~20 min → under 5</b></span>
+            <span class="impact-stat"><b>60+</b> logs/day</span>
+            <span class="impact-stat">Live daily in production</span>
+          </div>
           <p class="project-desc">
-            Full-stack ERP for a local RO water plant. Built end-to-end: FastAPI REST backend, React + Vite dashboard,
-            PostgreSQL with stored procedures and atomic transactions. A daily dispatch module cut 60+ delivery logs
-            from ~20 minutes to under 5. Added audit logging and a live revenue/top-customer stats module.
-            Real client, real production use.
+            Full-stack ERP for a real RO water plant — FastAPI backend, React + Vite dashboard, PostgreSQL with
+            stored procedures and atomic transactions. Daily dispatch module, audit logging, and a live
+            revenue / top-customer stats view.
           </p>
           <div class="project-stack">
             <span class="tag">FastAPI</span>
@@ -1501,6 +1617,9 @@
         </div>
 
         <div class="project-card featured">
+          <div class="project-figure is-placeholder">
+            <span class="ph-label">Sticky Todo — widget</span>
+          </div>
           <div class="project-header">
             <h3 class="project-name">
               Sticky Todo — Always-On Desktop Widget
@@ -1517,11 +1636,15 @@
               </a>
             </div>
           </div>
+          <div class="project-impact">
+            <span class="impact-stat"><b>3</b> live integrations</span>
+            <span class="impact-stat">Tokens <b>encrypted at rest</b></span>
+            <span class="impact-stat"><b>1-click</b> installer</span>
+          </div>
           <p class="project-desc">
-            Frameless, always-on-top desktop to-do widget built with Electron — one glance surface for the day.
-            Secure contextIsolation + preload/IPC architecture, atomic JSON storage, and a system tray that
-            survives Win+D. Pulls in ClickUp tasks, GitHub PRs and comments, and Google Classroom assignments over
-            OAuth 2.0, with refresh tokens encrypted at rest via Windows DPAPI. Ships as a one-click NSIS installer.
+            Frameless, always-on-top desktop to-do widget in Electron — one glance surface for the day. Secure
+            contextIsolation + IPC, atomic storage, tray that survives Win+D. Pulls ClickUp, GitHub PRs, and
+            Google Classroom over OAuth 2.0, with refresh tokens encrypted via Windows DPAPI.
           </p>
           <div class="project-stack">
             <span class="tag">Electron</span>
@@ -1534,6 +1657,9 @@
         </div>
 
         <div class="project-card">
+          <div class="project-figure is-placeholder">
+            <span class="ph-label">Smart-Distiller — pipeline</span>
+          </div>
           <div class="project-header">
             <h3 class="project-name">AI Smart-Distiller — LLM Information Pipeline</h3>
             <div class="project-links">
@@ -1543,11 +1669,15 @@
               </a>
             </div>
           </div>
+          <div class="project-impact">
+            <span class="impact-stat">Triage <b>~45 min → under 30s</b></span>
+            <span class="impact-stat"><b>Strict-JSON</b> LLM output</span>
+            <span class="impact-stat">n8n → Sheets / Discord / email</span>
+          </div>
           <p class="project-desc">
-            Team project — owned backend and API integration. Built an extraction layer calling GPT-4o-mini with an
-            engineered system prompt that returns strict JSON (summary, tasks, deadlines). A webhook layer POSTs
-            structured output into an n8n workflow routing to Google Sheets, Discord, and email.
-            Cut document triage from ~45 minutes to under 30 seconds.
+            Team project — owned the backend and API integration. An extraction layer calls GPT-4o-mini with an
+            engineered prompt returning strict JSON (summary, tasks, deadlines); a webhook pipes it into an n8n
+            workflow routing to Google Sheets, Discord, and email.
           </p>
           <div class="project-stack">
             <span class="tag">Python</span>
@@ -1559,6 +1689,9 @@
         </div>
 
         <div class="project-card">
+          <div class="project-figure is-placeholder">
+            <span class="ph-label">Multiplayer Pong — gameplay</span>
+          </div>
           <div class="project-header">
             <h3 class="project-name">Multiplayer Pong — Real-Time Networked Game</h3>
             <div class="project-links">
@@ -1568,10 +1701,15 @@
               </a>
             </div>
           </div>
+          <div class="project-impact">
+            <span class="impact-stat"><b>60 FPS</b> real-time</span>
+            <span class="impact-stat">Online + offline + vs-CPU</span>
+            <span class="impact-stat">ENet netcode</span>
+          </div>
           <p class="project-desc">
-            Real-time Pong with online, offline, and vs-computer modes at 60 FPS. Used ENet to synchronize
-            game state between two networked clients. Object-oriented engine with Ball/Paddle classes, 
-            swappable theme-and-skin system, and custom menu UI.
+            Real-time Pong in C++ with online, offline, and vs-computer modes. ENet synchronizes game state
+            between two networked clients; an OO engine with Ball / Paddle classes, a swappable theme-and-skin
+            system, and a custom menu UI.
           </p>
           <div class="project-stack">
             <span class="tag">C++</span>
