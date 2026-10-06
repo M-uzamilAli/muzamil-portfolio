@@ -192,7 +192,7 @@
 
     /* LAYOUT */
     main {
-      max-width: 760px;
+      max-width: 880px;
       margin: 0 auto;
       padding: 0 2rem;
     }
@@ -456,36 +456,79 @@
     }
 
     /* SKILLS */
-    /* core strengths — highlighted above the full breakdown */
-    .skills-core {
+    /* three strength pillars — what I build + one line of proof */
+    .skill-pillars {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .skill-pillar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 2px solid var(--accent);
+      border-radius: 8px;
+      padding: 20px;
+      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
+    }
+
+    :root.light .skill-pillar { box-shadow: var(--shadow-card); }
+    :root.light .skill-pillar:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
+
+    .pillar-title {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 13px;
+    }
+
+    .pillar-skills {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 6px;
       margin-bottom: 14px;
     }
 
-    .core-skill {
-      font-family: var(--mono);
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      background: var(--surface);
-      border: 1px solid var(--border-light);
-      border-left: 2px solid var(--accent);
-      border-radius: 4px;
-      padding: 8px 14px;
-      transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+    .pillar-proof {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.6;
     }
 
-    .core-skill:hover { color: var(--accent); }
+    .pillar-proof b { color: var(--accent); font-weight: 600; }
 
-    .skills-sub-label {
+    /* collapsible full breakdown — keeps the pillars the focus */
+    .breakdown { margin-top: 2px; }
+
+    .breakdown-summary {
       font-family: var(--mono);
       font-size: 11px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted);
-      margin: 30px 0 14px;
+      cursor: pointer;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 0;
+      transition: color 0.2s var(--ease);
+    }
+
+    .breakdown-summary::-webkit-details-marker { display: none; }
+    .breakdown-summary::after {
+      content: '▾';
+      font-size: 10px;
+      transition: transform 0.2s var(--ease);
+    }
+    .breakdown[open] .breakdown-summary::after { transform: rotate(180deg); }
+    .breakdown-summary:hover { color: var(--accent); }
+    .breakdown .skills-grid { margin-top: 14px; }
+
+    @media (max-width: 680px) {
+      .skill-pillars { grid-template-columns: 1fr; }
     }
 
     .skills-grid {
@@ -1181,7 +1224,7 @@
     footer {
       border-top: 1px solid var(--border);
       padding: 24px 2rem;
-      max-width: 760px;
+      max-width: 880px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
@@ -1473,102 +1516,115 @@
     <section id="skills">
       <h2 class="section-label">Skills</h2>
 
-      <div class="skills-core">
-        <span class="core-skill">Python</span>
-        <span class="core-skill">FastAPI</span>
-        <span class="core-skill">React</span>
-        <span class="core-skill">PostgreSQL</span>
-        <span class="core-skill">LLM Integration</span>
-        <span class="core-skill">TypeScript</span>
-        <span class="core-skill">Electron</span>
-        <span class="core-skill">Git &amp; Agile</span>
-      </div>
-
-      <p class="skills-sub-label">Full breakdown</p>
-
-      <div class="skills-grid">
-
-        <div class="skill-group">
-          <p class="skill-group-label">AI &amp; LLM</p>
-          <div class="skill-tags">
-            <span class="tag">OpenAI API</span>
-            <span class="tag">GPT-4o-mini</span>
-            <span class="tag">Prompt Engineering</span>
+      <div class="skill-pillars">
+        <div class="skill-pillar">
+          <h3 class="pillar-title">Build AI features</h3>
+          <div class="pillar-skills">
             <span class="tag">LLM Integration</span>
-            <span class="tag">JSON Extraction</span>
-            <span class="tag">n8n Workflows</span>
+            <span class="tag">Prompt Engineering</span>
+            <span class="tag">n8n</span>
           </div>
+          <p class="pillar-proof">AI Smart-Distiller cut document triage from <b>~45 min → under 30s</b>.</p>
         </div>
 
-        <div class="skill-group">
-          <p class="skill-group-label">Backend</p>
-          <div class="skill-tags">
+        <div class="skill-pillar">
+          <h3 class="pillar-title">Build reliable backends</h3>
+          <div class="pillar-skills">
             <span class="tag">FastAPI</span>
-            <span class="tag">Python</span>
-            <span class="tag">Pydantic</span>
-            <span class="tag">SQLAlchemy</span>
-            <span class="tag">REST API</span>
-            <span class="tag">Redis</span>
-            <span class="tag">Stored Procedures</span>
-            <span class="tag">Auth</span>
-            <span class="tag">Webhooks</span>
-          </div>
-        </div>
-
-        <div class="skill-group">
-          <p class="skill-group-label">Frontend</p>
-          <div class="skill-tags">
-            <span class="tag">React</span>
-            <span class="tag">Vite</span>
-            <span class="tag">TanStack Query</span>
-            <span class="tag">JavaScript</span>
-            <span class="tag">TypeScript</span>
-            <span class="tag">Tailwind CSS</span>
-            <span class="tag">HTML5</span>
-            <span class="tag">CSS3</span>
-            <span class="tag">Streamlit</span>
-          </div>
-        </div>
-
-        <div class="skill-group">
-          <p class="skill-group-label">Database</p>
-          <div class="skill-tags">
             <span class="tag">PostgreSQL</span>
-            <span class="tag">Supabase</span>
-            <span class="tag">MySQL</span>
-            <span class="tag">SQLite</span>
-            <span class="tag">Oracle SQL</span>
+            <span class="tag">Redis</span>
           </div>
+          <p class="pillar-proof">Tulip ERP runs a <b>real business every day</b> in production.</p>
         </div>
 
-        <div class="skill-group">
-          <p class="skill-group-label">Languages</p>
-          <div class="skill-tags">
-            <span class="tag">Python</span>
-            <span class="tag">JavaScript</span>
+        <div class="skill-pillar">
+          <h3 class="pillar-title">Build interfaces</h3>
+          <div class="pillar-skills">
+            <span class="tag">React</span>
             <span class="tag">TypeScript</span>
-            <span class="tag">C++</span>
-            <span class="tag">C</span>
-            <span class="tag">SQL</span>
+            <span class="tag">Electron</span>
           </div>
+          <p class="pillar-proof">Sticky Todo ships as a <b>one-click desktop installer</b>.</p>
         </div>
-
-        <div class="skill-group">
-          <p class="skill-group-label">Tools &amp; Infra</p>
-          <div class="skill-tags">
-            <span class="tag">Git</span>
-            <span class="tag">GitHub</span>
-            <span class="tag">Render</span>
-            <span class="tag">Vercel</span>
-            <span class="tag">Azure App Insights</span>
-            <span class="tag">Linux</span>
-            <span class="tag">VS Code</span>
-            <span class="tag">Agile / Scrum</span>
-            <span class="tag">Cloud Deployment</span>
-          </div>
-        </div>
-
       </div>
+
+      <details class="breakdown">
+        <summary class="breakdown-summary">Full breakdown</summary>
+        <div class="skills-grid">
+
+          <div class="skill-group">
+            <p class="skill-group-label">AI &amp; LLM</p>
+            <div class="skill-tags">
+              <span class="tag">OpenAI API</span>
+              <span class="tag">GPT-4o-mini</span>
+              <span class="tag">Prompt Engineering</span>
+              <span class="tag">LLM Integration</span>
+              <span class="tag">JSON Extraction</span>
+              <span class="tag">n8n Workflows</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
+            <p class="skill-group-label">Backend</p>
+            <div class="skill-tags">
+              <span class="tag">FastAPI</span>
+              <span class="tag">Python</span>
+              <span class="tag">Pydantic</span>
+              <span class="tag">SQLAlchemy</span>
+              <span class="tag">REST API</span>
+              <span class="tag">Redis</span>
+              <span class="tag">Stored Procedures</span>
+              <span class="tag">Auth</span>
+              <span class="tag">Webhooks</span>
+              <span class="tag">C++</span>
+              <span class="tag">C</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
+            <p class="skill-group-label">Frontend</p>
+            <div class="skill-tags">
+              <span class="tag">React</span>
+              <span class="tag">Vite</span>
+              <span class="tag">TanStack Query</span>
+              <span class="tag">JavaScript</span>
+              <span class="tag">TypeScript</span>
+              <span class="tag">Electron</span>
+              <span class="tag">Tailwind CSS</span>
+              <span class="tag">HTML5</span>
+              <span class="tag">CSS3</span>
+              <span class="tag">Streamlit</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
+            <p class="skill-group-label">Database</p>
+            <div class="skill-tags">
+              <span class="tag">PostgreSQL</span>
+              <span class="tag">Supabase</span>
+              <span class="tag">MySQL</span>
+              <span class="tag">SQLite</span>
+              <span class="tag">Oracle SQL</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
+            <p class="skill-group-label">Tools &amp; Infra</p>
+            <div class="skill-tags">
+              <span class="tag">Git</span>
+              <span class="tag">GitHub</span>
+              <span class="tag">Render</span>
+              <span class="tag">Vercel</span>
+              <span class="tag">Azure App Insights</span>
+              <span class="tag">Linux</span>
+              <span class="tag">VS Code</span>
+              <span class="tag">Agile / Scrum</span>
+              <span class="tag">Cloud Deployment</span>
+            </div>
+          </div>
+
+        </div>
+      </details>
     </section>
 
     <div class="divider"></div>
@@ -1972,7 +2028,7 @@
     sections.forEach((sec) => {
       sec.querySelectorAll(
         '.section-label, .about-text, .stats-row, .contact-text, .contact-links, ' +
-        '.skill-group, .project-card, .projects-more, .exp-card, .edu-card, .terminal'
+        '.skill-pillar, .skill-group, .project-card, .projects-more, .exp-card, .edu-card, .terminal'
       ).forEach((el) => el.classList.add('reveal'));
       if (!reduceMotion) {
         sec.querySelectorAll('.tag').forEach((t) => t.classList.add('tag-hidden'));
@@ -2337,7 +2393,7 @@
     filterPill.type = 'button';
     document.body.appendChild(filterPill);
 
-    const taggedCards = document.querySelectorAll('.skill-group, .project-card, .edu-card');
+    const taggedCards = document.querySelectorAll('.skill-pillar, .skill-group, .project-card, .edu-card');
     const tagName = (t) => t.textContent.trim().toLowerCase();
     let activeFilter = null;
 
