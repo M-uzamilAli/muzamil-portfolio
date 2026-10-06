@@ -56,10 +56,12 @@
       --border: #1E1E1E;
       --border-light: #2A2A2A;
       --text: #F0F0F0;
+      --text-soft: #C4C4C4;     /* one step down from --text */
       --muted: #888888;
       --faint: #444444;
       --accent: #4ADE80;
       --accent-dim: #16532a;
+      --chip: #1A1A1A;          /* borderless chip fill */
       --nav-bg: rgba(10,10,10,0.92);
       --shadow-card: none;
       --shadow-hover: none;
@@ -75,11 +77,13 @@
       --surface: #FDFAF5;
       --border: #E5DDD0;
       --border-light: #D8CFBF;
-      --text: #1C1917;
+      --text: #2E2A25;        /* warm charcoal, not near-black, on cream */
+      --text-soft: #4A443C;
       --muted: #6B6258;
       --faint: #B5ADA2;
       --accent: #2D7A4F;
       --accent-dim: #D4EDE1;
+      --chip: #EFE9DE;
       --nav-bg: rgba(245,240,232,0.93);
       --shadow-card: 0 2px 10px rgba(80,50,10,0.06), 0 1px 3px rgba(80,50,10,0.04);
       --shadow-hover: 0 8px 28px rgba(80,50,10,0.10), 0 2px 8px rgba(80,50,10,0.06);
@@ -460,67 +464,111 @@
     .skill-pillars {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
+      gap: 20px;
       margin-bottom: 22px;
     }
 
+    /* the number is the hero: icon → quiet title → big metric → caption,
+       then a ruled-off tools zone at the bottom. Whole card is a link. */
     .skill-pillar {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-top: 2px solid var(--accent);
       border-radius: 8px;
-      padding: 20px;
-      /* column so the proof line always sits at the bottom, however
-         many rows of chips sit above it */
+      padding: 26px 24px 22px;
       display: flex;
       flex-direction: column;
-      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease);
+      text-decoration: none;
+      color: inherit;
+      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease),
+                  border-color 0.3s var(--ease), background 0.3s var(--ease);
     }
 
+    :root:not(.light) .skill-pillar:hover { border-color: var(--border-light); transform: translateY(-2px); }
     :root.light .skill-pillar { box-shadow: var(--shadow-card); }
     :root.light .skill-pillar:hover { box-shadow: var(--shadow-hover); transform: translateY(-2px); }
 
+    /* just a label — the metric is the headline */
     .pillar-title {
       font-family: var(--mono);
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--muted);
       margin-bottom: 13px;
     }
 
+    /* nowrap + sized for the longest string ("3 tabs → 1 window"): if one
+       metric wraps, that card's whole stack falls out of line with the others */
+    .pillar-metric {
+      font-family: var(--mono);
+      font-size: clamp(15px, 2.1vw, 19px);
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+    }
+
+    .pillar-metric .to { font-weight: 400; }
+
+    /* sans for the caption, same rule as the breakdown */
+    .pillar-caption {
+      font-family: var(--sans);
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+
+    /* where the number came from — the thing that makes it believable */
+    .pillar-source {
+      font-family: var(--sans);
+      font-size: 11.5px;
+      color: var(--faint);
+      line-height: 1.6;
+      margin-top: 14px;
+      margin-bottom: 26px;   /* floor for the gap above the rule */
+    }
+
+    .pillar-source .go {
+      display: inline-block;
+      transition: transform 0.2s var(--ease);
+    }
+
+    .skill-pillar:hover .pillar-source { color: var(--accent); }
+    .skill-pillar:hover .pillar-source .go { transform: translateX(3px); }
+
+    /* tools zone — ruled off, pinned to the bottom so all three line up */
     .pillar-skills {
       display: flex;
       flex-wrap: wrap;
-      align-content: flex-start;
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-
-    .pillar-proof {
+      align-items: baseline;
+      gap: 8px;
       margin-top: auto;
-      font-size: 12.5px;
-      color: var(--muted);
-      line-height: 1.6;
+      padding-top: 17px;
+      border-top: 1px solid var(--border);
     }
 
-    .pillar-proof b { color: var(--accent); font-weight: 600; }
-
-    /* collapsible full breakdown — keeps the pillars the focus */
-    .breakdown { margin-top: 2px; }
+    /* collapsible full breakdown — a real toggle, not a stray label */
+    .breakdown { margin-top: 4px; }
 
     .breakdown-summary {
       font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
+      font-size: 12px;
       color: var(--muted);
       cursor: pointer;
       list-style: none;
-      display: inline-flex;
+      /* flex + fit-content + auto margins centres it under the pillars */
+      display: flex;
+      width: fit-content;
+      margin: 0 auto;
       align-items: center;
       gap: 8px;
-      padding: 8px 0;
-      transition: color 0.2s var(--ease);
+      padding: 9px 15px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: color 0.2s var(--ease), border-color 0.2s var(--ease), background 0.2s var(--ease);
     }
 
     .breakdown-summary::-webkit-details-marker { display: none; }
@@ -530,65 +578,70 @@
       transition: transform 0.2s var(--ease);
     }
     .breakdown[open] .breakdown-summary::after { transform: rotate(180deg); }
-    .breakdown-summary:hover { color: var(--accent); }
-    .breakdown .skills-grid { margin-top: 14px; }
 
-    @media (max-width: 680px) {
+    .breakdown-summary:hover {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: var(--surface);
+    }
+
+    /* label swaps with the open state so the control says what it does */
+    .breakdown .on-open { display: none; }
+    .breakdown[open] .on-open { display: inline; }
+    .breakdown[open] .on-closed { display: none; }
+
+    .breakdown .skills-grid { margin-top: 18px; }
+
+    /* one column before the three get too narrow for the metric line */
+    @media (max-width: 760px) {
       .skill-pillars { grid-template-columns: 1fr; }
+      .pillar-metric { font-size: 19px; }
     }
 
+    /* one panel holding light rows, not a second grid of cards */
     .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 1px;
-      background: var(--border);
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 6px;
-      overflow: hidden;
+      border-radius: 8px;
+      padding: 2px 22px;
     }
 
-    :root.light .skills-grid {
-      background: transparent;
-      border: none;
-      gap: 10px;
-    }
+    :root.light .skills-grid { box-shadow: var(--shadow-card); }
 
     .skill-group {
-      background: var(--bg);
-      padding: 20px 22px;
-      transition: box-shadow 0.3s var(--ease), transform 0.3s var(--ease), background 0.3s var(--ease), opacity 0.35s var(--ease);
+      display: grid;
+      grid-template-columns: 124px 1fr;
+      gap: 16px;
+      align-items: baseline;
+      padding: 15px 0;
+      border-top: 1px solid var(--border);
+      transition: opacity 0.35s var(--ease);
     }
 
-    :root:not(.light) .skill-group:hover {
-      background: var(--surface);
-    }
+    .skill-group:first-child { border-top: none; }
 
-    :root.light .skill-group {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      box-shadow: var(--shadow-card);
-    }
-
-    :root.light .skill-group:hover {
-      box-shadow: var(--shadow-hover);
-      transform: translateY(-2px);
-    }
-
+    /* level 1 — the category, what the eye lands on first */
     .skill-group-label {
       font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
     }
 
+    /* level 3 — the long tail: sans (easier to scan than mono), lighter.
+       No dots here — the list is long enough that they turn into noise. */
     .skill-tags {
       display: flex;
       flex-wrap: wrap;
-      gap: 6px;
+      align-items: baseline;
+      column-gap: 16px;
+      row-gap: 6px;
+    }
+
+    @media (max-width: 560px) {
+      .skill-group { grid-template-columns: 1fr; gap: 8px; }
     }
 
     .tag {
@@ -671,12 +724,31 @@
       gap: 12px;
     }
 
+    /* image left, text right — one reading order per card:
+       title → summary → result → tech → links.
+       The links tuck into the dead space under the image. */
     .project-card {
       position: relative;
       background: var(--bg);
-      padding: 28px 28px;
+      padding: 26px 26px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        "figure body"
+        "links  body";
+      column-gap: 26px;
+      row-gap: 18px;
+      align-items: start;
       transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease), transform 0.3s var(--ease), opacity 0.35s var(--ease);
     }
+
+    /* clears the fixed nav when a Skills pillar links straight to a card */
+    .project-card[id] { scroll-margin-top: 90px; }
+
+    .project-figure { grid-area: figure; }
+    .project-links  { grid-area: links; }
+    .project-body   { grid-area: body; }
 
     /* cursor-tracking glow — sits behind content, only shows on hover */
     .project-card::before {
@@ -691,7 +763,9 @@
 
     .project-card:hover::before { opacity: 1; }
 
-    .project-card > * { position: relative; }
+    /* min-width:0 — grid children default to min-content width and would
+       otherwise push past the card's right padding on narrow screens */
+    .project-card > * { position: relative; min-width: 0; }
 
     :root.light .project-card {
       background: var(--surface);
@@ -713,23 +787,27 @@
       border-left: 2px solid var(--accent);
     }
 
-    .project-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
+    /* 1 — title, the biggest thing in the card */
     .project-name {
       font-family: var(--mono);
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 700;
+      line-height: 1.45;
       color: var(--text);
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    /* the descriptor the title used to carry — quiet, directly under it */
+    .project-sub {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-bottom: 12px;   /* tight — name + descriptor + summary are one unit */
     }
 
     .project-badge {
@@ -744,29 +822,40 @@
       border-radius: 3px;
     }
 
+    /* 5 — links, last but still clickable-looking.
+       Centred under the image, so one link or two both sit balanced. */
     .project-links {
       display: flex;
-      gap: 10px;
-      flex-shrink: 0;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 18px;
     }
 
     .project-link {
       font-family: var(--mono);
-      font-size: 11px;
+      font-size: 12.5px;
+      font-weight: 500;
       color: var(--muted);
       text-decoration: none;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
       transition: color 0.15s;
     }
+
+    .project-link svg { width: 13px; height: 13px; }
+
+    /* the action we most want people to take */
+    .project-link.is-primary { color: var(--accent); font-weight: 600; }
 
     .project-link:hover { color: var(--accent); }
 
     /* "everything else lives on GitHub" link under the project list */
     .projects-more {
-      margin-top: 26px;
-      display: inline-flex;
+      /* centred under the project list */
+      margin: 26px auto 0;
+      display: flex;
+      width: fit-content;
       align-items: center;
       gap: 8px;
       font-family: var(--mono);
@@ -791,42 +880,133 @@
 
     .projects-more:hover .projects-more-arrow { transform: translateX(3px); }
 
+    /* 2 — plain-words summary, about two lines */
     .project-desc {
       font-size: 13px;
       color: var(--muted);
       line-height: 1.7;
-      margin-bottom: 14px;
+      margin-bottom: 20px;   /* wide — isolates the result below */
       max-width: 600px;
     }
 
+    /* 3 — the single best number, the only accent in the card body */
+    .project-result {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--accent);
+      line-height: 1.6;
+      margin-bottom: 16px;
+    }
+
+    /* 4 — tech as quiet dot-separated text, not boxes */
     .project-stack {
       display: flex;
       flex-wrap: wrap;
-      gap: 5px;
+      align-items: baseline;
+      gap: 8px;
     }
 
-    /* project screenshot / preview slot */
+    /* one tech-list style for the whole page: plain gray text, dot-separated */
+    .project-stack .tag,
+    .pillar-skills .tag,
+    .skill-tags .tag {
+      font-size: 11.5px;
+      color: var(--muted);
+      background: transparent;
+      border-color: transparent;
+      padding: 0;
+    }
+
+    /* dots only where the list is short enough to stay readable */
+    .project-stack .tag:not(:last-child)::after,
+    .pillar-skills .tag:not(:last-child)::after {
+      content: '·';
+      margin-left: 8px;
+      color: var(--faint);
+    }
+
+    /* two tools per card, sized so the longest pair stays on one line at any
+       width — a wrapped list pushes that card's rule out of line with the rest */
+    .pillar-skills .tag { font-size: 11px; }
+    .pillar-skills .tag:not(:last-child)::after { margin-left: 6px; }
+    .pillar-skills { gap: 6px; }
+
+    /* the breakdown's long lists: sans, bigger, and split into two levels */
+    .skill-tags .tag {
+      font-family: var(--sans);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+
+    /* level 2 — the skills that carry the work. One step softer than the
+       label so the category still leads the row. */
+    .skill-tags .tag.is-key {
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+
+    .project-stack .tag:hover, .pillar-skills .tag:hover, .skill-tags .tag:hover,
+    .project-stack .tag.tag-match, .pillar-skills .tag.tag-match, .skill-tags .tag.tag-match {
+      color: var(--accent);
+      background: transparent;
+    }
+
+    /* project screenshot / preview slot — left column on wide screens.
+       It's a <button>: at 240px nothing is legible, so it opens full-size. */
     .project-figure {
+      position: relative;
       aspect-ratio: 16 / 9;
-      margin-bottom: 18px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 6px;
       overflow: hidden;
+      padding: 0;
+      font: inherit;
+      color: inherit;
+      text-align: inherit;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.25s var(--ease);
     }
 
-    .project-figure img {
+    /* only figures that actually have media are clickable */
+    .project-figure:not([data-media]) { cursor: default; }
+    .project-figure[data-media] { cursor: zoom-in; }
+    .project-figure[data-media]:hover { border-color: var(--accent); }
+
+    .project-figure img,
+    .project-figure .figure-art {
       width: 100%;
       height: 100%;
       object-fit: cover;
       display: block;
     }
 
+    /* "this opens" affordance — ▶ for a clip, ⤢ for a still */
+    .figure-badge {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      min-width: 22px;
+      height: 22px;
+      padding: 0 6px;
+      border-radius: 4px;
+      background: rgba(10, 10, 10, 0.72);
+      color: #F0F0F0;
+      font-size: 10px;
+      line-height: 22px;
+      text-align: center;
+      pointer-events: none;
+      transition: background 0.25s var(--ease);
+    }
+
+    .project-figure[data-media]:hover .figure-badge { background: var(--accent); color: #0A0A0A; }
+
     /* intentional placeholder until a real screenshot is dropped in —
-       compact banner now; swapping in an <img> restores the full 16:9 */
+       swapping in an <img> needs no other change */
     .project-figure.is-placeholder {
-      aspect-ratio: auto;
-      height: 118px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -845,28 +1025,104 @@
       padding: 5px 11px;
     }
 
-    /* impact row — numbers + results, read first */
-    .project-impact {
+    /* LIGHTBOX — the thumbnail is 240px wide, so the real view lives here.
+       The dim does the work; the blur is an enhancement, because a
+       full-viewport backdrop-filter drops frames on weak GPUs. */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(8, 8, 8, 0.88);
+    }
+
+    @supports (backdrop-filter: blur(8px)) {
+      .lightbox { backdrop-filter: blur(8px); }
+    }
+
+    .lightbox.open { display: flex; }
+
+    @keyframes lb-in {
+      from { opacity: 0; transform: scale(0.97); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .lightbox-inner {
+      width: min(900px, 100%);
       display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-      margin-bottom: 14px;
+      flex-direction: column;
+      gap: 14px;
+      animation: lb-in 0.22s var(--ease) both;
     }
 
-    .impact-stat {
+    .lightbox-media {
+      border-radius: 8px;
+      overflow: hidden;
+      background: #0E0E0E;
+      border: 1px solid #2A2A2A;
+      line-height: 0;
+    }
+
+    .lightbox-media img,
+    .lightbox-media video,
+    .lightbox-media svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: calc(100vh - 170px);
+      object-fit: contain;
+      margin: 0 auto;
+    }
+
+    /* the overlay is dark in both themes, so these colours are fixed */
+    .lightbox-caption {
       font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text);
-      background: var(--surface);
-      border: 1px solid var(--border-light);
-      border-radius: 4px;
-      padding: 4px 9px;
-      line-height: 1.5;
+      font-size: 12px;
+      color: #C9C9C9;
+      text-align: center;
+      line-height: 1.6;
     }
 
-    .impact-stat b {
-      color: var(--accent);
-      font-weight: 700;
+    .lightbox-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.08);
+      color: #F0F0F0;
+      font-size: 17px;
+      line-height: 1;
+      cursor: pointer;
+      transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+    }
+
+    .lightbox-close:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #0A0A0A;
+    }
+
+    @media (max-width: 600px) {
+      .lightbox { padding: 14px; }
+      .lightbox-close { top: 10px; right: 10px; }
+    }
+
+    /* narrow column — one stack, with the links back at the bottom */
+    @media (max-width: 760px) {
+      .project-card {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        grid-template-areas: "figure" "body" "links";
+        row-gap: 18px;
+      }
+      /* stacked under the text, the links line up with it instead */
+      .project-links { justify-content: flex-start; }
     }
 
     /* EXPERIENCE */
@@ -1523,109 +1779,113 @@
       <h2 class="section-label">Skills</h2>
 
       <div class="skill-pillars">
-        <div class="skill-pillar">
+        <a class="skill-pillar" href="#p-smart-distiller">
           <h3 class="pillar-title">Build AI features</h3>
+          <p class="pillar-metric">45 min <span class="to">→</span> 30 sec</p>
+          <p class="pillar-caption">document triage</p>
+          <p class="pillar-source">AI Smart-Distiller — team project, I built the backend <span class="go">→</span></p>
           <div class="pillar-skills">
             <span class="tag">LLM Integration</span>
-            <span class="tag">Prompt Engineering</span>
             <span class="tag">n8n</span>
           </div>
-          <p class="pillar-proof">AI Smart-Distiller cut document triage from <b>~45 min → under 30s</b>.</p>
-        </div>
+        </a>
 
-        <div class="skill-pillar">
+        <a class="skill-pillar" href="#p-tulip-erp">
           <h3 class="pillar-title">Build backends</h3>
+          <p class="pillar-metric">20 min <span class="to">→</span> 5 min</p>
+          <p class="pillar-caption">daily dispatch logging</p>
+          <p class="pillar-source">Tulip ERP — live in production, built solo <span class="go">→</span></p>
           <div class="pillar-skills">
             <span class="tag">FastAPI</span>
             <span class="tag">PostgreSQL</span>
-            <span class="tag">Redis</span>
           </div>
-          <p class="pillar-proof">Tulip ERP runs a <b>real business every day</b> in production.</p>
-        </div>
+        </a>
 
-        <div class="skill-pillar">
+        <a class="skill-pillar" href="#p-sticky-todo">
           <h3 class="pillar-title">Build interfaces</h3>
+          <p class="pillar-metric">3 tabs <span class="to">→</span> 1 window</p>
+          <p class="pillar-caption">morning check-in</p>
+          <p class="pillar-source">Sticky Todo — personal tool, shipped as an installer <span class="go">→</span></p>
           <div class="pillar-skills">
             <span class="tag">React</span>
-            <span class="tag">TypeScript</span>
             <span class="tag">Electron</span>
           </div>
-          <p class="pillar-proof">Sticky Todo ships as a <b>one-click desktop installer</b>.</p>
-        </div>
+        </a>
       </div>
 
       <details class="breakdown">
-        <summary class="breakdown-summary">Full breakdown</summary>
+        <summary class="breakdown-summary">
+          <span class="on-closed">Show full breakdown</span>
+          <span class="on-open">Hide full breakdown</span>
+        </summary>
         <div class="skills-grid">
 
           <div class="skill-group">
-            <p class="skill-group-label">AI &amp; LLM</p>
+            <p class="skill-group-label">Languages</p>
             <div class="skill-tags">
-              <span class="tag">OpenAI API</span>
-              <span class="tag">GPT-4o-mini</span>
-              <span class="tag">Prompt Engineering</span>
-              <span class="tag">LLM Integration</span>
-              <span class="tag">JSON Extraction</span>
-              <span class="tag">n8n Workflows</span>
-            </div>
-          </div>
-
-          <div class="skill-group">
-            <p class="skill-group-label">Backend</p>
-            <div class="skill-tags">
-              <span class="tag">FastAPI</span>
-              <span class="tag">Python</span>
-              <span class="tag">Pydantic</span>
-              <span class="tag">SQLAlchemy</span>
-              <span class="tag">REST API</span>
-              <span class="tag">Redis</span>
-              <span class="tag">Stored Procedures</span>
-              <span class="tag">Auth</span>
-              <span class="tag">Webhooks</span>
+              <span class="tag is-key">Python</span>
+              <span class="tag is-key">TypeScript</span>
+              <span class="tag">JavaScript</span>
               <span class="tag">C++</span>
               <span class="tag">C</span>
             </div>
           </div>
 
           <div class="skill-group">
+            <p class="skill-group-label">AI &amp; LLM</p>
+            <div class="skill-tags">
+              <span class="tag is-key">LLM Integration</span>
+              <span class="tag is-key">Prompt Engineering</span>
+              <span class="tag is-key">n8n Workflows</span>
+              <span class="tag">OpenAI API</span>
+              <span class="tag">Structured JSON output</span>
+              <span class="tag">Streamlit</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
+            <p class="skill-group-label">Backend</p>
+            <div class="skill-tags">
+              <span class="tag is-key">FastAPI</span>
+              <span class="tag is-key">REST APIs</span>
+              <span class="tag">Redis</span>
+              <span class="tag">Pydantic</span>
+              <span class="tag">SQLAlchemy</span>
+              <span class="tag">JWT auth</span>
+            </div>
+          </div>
+
+          <div class="skill-group">
             <p class="skill-group-label">Frontend</p>
             <div class="skill-tags">
-              <span class="tag">React</span>
+              <span class="tag is-key">React</span>
+              <span class="tag is-key">Electron</span>
               <span class="tag">Vite</span>
               <span class="tag">TanStack Query</span>
-              <span class="tag">JavaScript</span>
-              <span class="tag">TypeScript</span>
-              <span class="tag">Electron</span>
               <span class="tag">Tailwind CSS</span>
-              <span class="tag">HTML5</span>
-              <span class="tag">CSS3</span>
-              <span class="tag">Streamlit</span>
             </div>
           </div>
 
           <div class="skill-group">
             <p class="skill-group-label">Database</p>
             <div class="skill-tags">
-              <span class="tag">PostgreSQL</span>
-              <span class="tag">Supabase</span>
+              <span class="tag is-key">PostgreSQL</span>
+              <span class="tag is-key">Supabase</span>
               <span class="tag">MySQL</span>
               <span class="tag">SQLite</span>
-              <span class="tag">Oracle SQL</span>
             </div>
           </div>
 
           <div class="skill-group">
             <p class="skill-group-label">Tools &amp; Infra</p>
             <div class="skill-tags">
-              <span class="tag">Git</span>
-              <span class="tag">GitHub</span>
+              <span class="tag is-key">Git</span>
+              <span class="tag is-key">GitHub</span>
               <span class="tag">Render</span>
               <span class="tag">Vercel</span>
               <span class="tag">Azure App Insights</span>
               <span class="tag">Linux</span>
-              <span class="tag">VS Code</span>
               <span class="tag">Agile / Scrum</span>
-              <span class="tag">Cloud Deployment</span>
             </div>
           </div>
 
@@ -1640,145 +1900,155 @@
       <h2 class="section-label">Projects</h2>
       <div class="projects-list">
 
-        <div class="project-card featured">
-          <div class="project-figure is-placeholder">
+        <div class="project-card featured" id="p-tulip-erp">
+          <button class="project-figure is-placeholder" type="button">
             <span class="ph-label">Tulip ERP — dashboard</span>
-          </div>
-          <div class="project-header">
+          </button>
+          <div class="project-body">
             <h3 class="project-name">
-              Tulip ERP — RO Water Plant Management System
+              Tulip ERP
               <span class="project-badge">Featured</span>
             </h3>
-            <div class="project-links">
+            <p class="project-sub">RO water plant management system</p>
+            <p class="project-desc">
+              Full-stack ERP running a real water plant — daily dispatch, audit logging, and a live
+              revenue and top-customer view.
+            </p>
+            <p class="project-result">Dispatch cut from ~20 min to under 5 min</p>
+            <div class="project-stack">
+              <span class="tag">FastAPI</span>
+              <span class="tag">React</span>
+              <span class="tag">PostgreSQL</span>
+              <span class="tag">Supabase</span>
+            </div>
+          </div>
+          <div class="project-links">
               <a class="project-link" href="https://github.com/M-uzamilAli/WATER_PLANT_FULL_STACK_APP" target="_blank" rel="noopener">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
                 GitHub
               </a>
-            </div>
-          </div>
-          <div class="project-impact">
-            <span class="impact-stat">Dispatch <b>~20 min → under 5</b></span>
-            <span class="impact-stat"><b>60+</b> logs/day</span>
-            <span class="impact-stat">Live daily in production</span>
-          </div>
-          <p class="project-desc">
-            Full-stack ERP for a real RO water plant — FastAPI backend, React + Vite dashboard, PostgreSQL with
-            stored procedures and atomic transactions. Daily dispatch module, audit logging, and a live
-            revenue / top-customer stats view.
-          </p>
-          <div class="project-stack">
-            <span class="tag">FastAPI</span>
-            <span class="tag">React</span>
-            <span class="tag">Vite</span>
-            <span class="tag">PostgreSQL</span>
-            <span class="tag">Supabase</span>
-            <span class="tag">Pydantic</span>
-            <span class="tag">SQLAlchemy</span>
-            <span class="tag">Loguru</span>
           </div>
         </div>
 
-        <div class="project-card featured">
-          <div class="project-figure is-placeholder">
+        <div class="project-card" id="p-sticky-todo">
+          <button class="project-figure is-placeholder" type="button">
             <span class="ph-label">Sticky Todo — widget</span>
+          </button>
+          <div class="project-body">
+            <h3 class="project-name">Sticky Todo</h3>
+            <p class="project-sub">Always-on desktop widget</p>
+            <p class="project-desc">
+              An always-on-top widget that shows your personal notes next to your tasks from ClickUp,
+              GitHub, and Google Classroom.
+            </p>
+            <p class="project-result">Login tokens are encrypted on your own machine</p>
+            <div class="project-stack">
+              <span class="tag">Electron</span>
+              <span class="tag">Node.js</span>
+              <span class="tag">OAuth 2.0</span>
+              <span class="tag">electron-builder</span>
+            </div>
           </div>
-          <div class="project-header">
-            <h3 class="project-name">
-              Sticky Todo — Always-On Desktop Widget
-              <span class="project-badge">Featured</span>
-            </h3>
-            <div class="project-links">
+          <div class="project-links">
               <a class="project-link" href="https://github.com/M-uzamilAli/Sticky-Todo-Desktop-App" target="_blank" rel="noopener">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
                 GitHub
               </a>
-              <a class="project-link" href="https://github.com/M-uzamilAli/Sticky-Todo-Desktop-App/releases/latest" target="_blank" rel="noopener">
+              <a class="project-link is-primary" href="https://github.com/M-uzamilAli/Sticky-Todo-Desktop-App/releases/latest" target="_blank" rel="noopener">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 16l-5-5h3V4h4v7h3l-5 5zm-7 2h14v2H5v-2z"/></svg>
                 Download
               </a>
-            </div>
-          </div>
-          <div class="project-impact">
-            <span class="impact-stat"><b>3</b> live integrations</span>
-            <span class="impact-stat">Tokens <b>encrypted at rest</b></span>
-            <span class="impact-stat"><b>1-click</b> installer</span>
-          </div>
-          <p class="project-desc">
-            Frameless, always-on-top desktop to-do widget in Electron — one glance surface for the day. Secure
-            contextIsolation + IPC, atomic storage, tray that survives Win+D. Pulls ClickUp, GitHub PRs, and
-            Google Classroom over OAuth 2.0, with refresh tokens encrypted via Windows DPAPI.
-          </p>
-          <div class="project-stack">
-            <span class="tag">Electron</span>
-            <span class="tag">JavaScript</span>
-            <span class="tag">Node.js</span>
-            <span class="tag">OAuth 2.0</span>
-            <span class="tag">Google Classroom API</span>
-            <span class="tag">electron-builder</span>
           </div>
         </div>
 
-        <div class="project-card">
-          <div class="project-figure is-placeholder">
-            <span class="ph-label">Smart-Distiller — pipeline</span>
+        <div class="project-card" id="p-smart-distiller">
+          <button class="project-figure" type="button"
+                  data-media="inline"
+                  data-caption="AI Smart-Distiller — a long document goes in, structured JSON comes out and routes itself">
+            <svg class="figure-art" viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg" role="img"
+                 aria-label="Diagram: a document is distilled by an LLM into structured JSON, then routed to Sheets, Discord and email">
+              <rect width="640" height="360" fill="var(--surface)"/>
+              <!-- the raw document -->
+              <rect x="56" y="78" width="176" height="204" rx="8" fill="var(--bg)" stroke="var(--border-light)" stroke-width="2"/>
+              <g fill="var(--faint)">
+                <rect x="82" y="110" width="124" height="9" rx="4"/>
+                <rect x="82" y="132" width="124" height="9" rx="4"/>
+                <rect x="82" y="154" width="98"  height="9" rx="4"/>
+                <rect x="82" y="176" width="124" height="9" rx="4"/>
+                <rect x="82" y="198" width="110" height="9" rx="4"/>
+                <rect x="82" y="220" width="124" height="9" rx="4"/>
+                <rect x="82" y="242" width="72"  height="9" rx="4"/>
+              </g>
+              <!-- the pass through the model -->
+              <path d="M252 180 H388" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+              <path d="M374 166 L390 180 L374 194" fill="none" stroke="var(--accent)" stroke-width="3"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+              <text x="320" y="158" text-anchor="middle" font-family="JetBrains Mono, monospace"
+                    font-size="22" font-weight="700" fill="var(--accent)">LLM</text>
+              <!-- the structured result -->
+              <rect x="408" y="78" width="176" height="204" rx="8" fill="var(--bg)" stroke="var(--accent)" stroke-width="2"/>
+              <text x="434" y="122" font-family="JetBrains Mono, monospace" font-size="26" font-weight="700" fill="var(--accent)">{</text>
+              <g fill="var(--accent)" opacity="0.85">
+                <rect x="452" y="140" width="56" height="9" rx="4"/>
+                <rect x="452" y="170" width="44" height="9" rx="4"/>
+                <rect x="452" y="200" width="62" height="9" rx="4"/>
+              </g>
+              <g fill="var(--muted)">
+                <rect x="518" y="140" width="40" height="9" rx="4"/>
+                <rect x="506" y="170" width="52" height="9" rx="4"/>
+                <rect x="524" y="200" width="34" height="9" rx="4"/>
+              </g>
+              <text x="434" y="258" font-family="JetBrains Mono, monospace" font-size="26" font-weight="700" fill="var(--accent)">}</text>
+            </svg>
+            <span class="figure-badge">⤢</span>
+          </button>
+          <div class="project-body">
+            <h3 class="project-name">AI Smart-Distiller</h3>
+            <p class="project-sub">LLM information pipeline</p>
+            <p class="project-desc">
+              Team project (I built the backend). Long documents go in, and a structured summary with tasks
+              and deadlines goes out to Sheets, Discord, or email.
+            </p>
+            <p class="project-result">Triage cut from ~45 min to under 30s</p>
+            <div class="project-stack">
+              <span class="tag">Python</span>
+              <span class="tag">OpenAI API</span>
+              <span class="tag">n8n</span>
+              <span class="tag">Webhooks</span>
+            </div>
           </div>
-          <div class="project-header">
-            <h3 class="project-name">AI Smart-Distiller — LLM Information Pipeline</h3>
-            <div class="project-links">
+          <div class="project-links">
               <a class="project-link" href="https://github.com/M-uzamilAli/AI-Smart-Distiller" target="_blank" rel="noopener">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
                 GitHub
               </a>
-            </div>
-          </div>
-          <div class="project-impact">
-            <span class="impact-stat">Triage <b>~45 min → under 30s</b></span>
-            <span class="impact-stat"><b>Strict-JSON</b> LLM output</span>
-            <span class="impact-stat">n8n → Sheets / Discord / email</span>
-          </div>
-          <p class="project-desc">
-            Team project — owned the backend and API integration. An extraction layer calls GPT-4o-mini with an
-            engineered prompt returning strict JSON (summary, tasks, deadlines); a webhook pipes it into an n8n
-            workflow routing to Google Sheets, Discord, and email.
-          </p>
-          <div class="project-stack">
-            <span class="tag">Python</span>
-            <span class="tag">OpenAI API</span>
-            <span class="tag">Streamlit</span>
-            <span class="tag">n8n</span>
-            <span class="tag">Webhooks</span>
           </div>
         </div>
 
         <div class="project-card">
-          <div class="project-figure is-placeholder">
+          <button class="project-figure is-placeholder" type="button">
             <span class="ph-label">Multiplayer Pong — gameplay</span>
+          </button>
+          <div class="project-body">
+            <h3 class="project-name">Multiplayer Pong</h3>
+            <p class="project-sub">Real-time networked game</p>
+            <p class="project-desc">
+              Pong in C++ with online, offline, and vs-computer modes, built on an object-oriented engine
+              with swappable themes and skins.
+            </p>
+            <p class="project-result">Two networked players kept in sync at a steady 60 FPS</p>
+            <div class="project-stack">
+              <span class="tag">C++</span>
+              <span class="tag">Raylib</span>
+              <span class="tag">ENet</span>
+              <span class="tag">OOP</span>
+            </div>
           </div>
-          <div class="project-header">
-            <h3 class="project-name">Multiplayer Pong — Real-Time Networked Game</h3>
-            <div class="project-links">
+          <div class="project-links">
               <a class="project-link" href="https://github.com/M-uzamilAli/Pong-OOP" target="_blank" rel="noopener">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
                 GitHub
               </a>
-            </div>
-          </div>
-          <div class="project-impact">
-            <span class="impact-stat"><b>60 FPS</b> real-time</span>
-            <span class="impact-stat">Online + offline + vs-CPU</span>
-            <span class="impact-stat">ENet netcode</span>
-          </div>
-          <p class="project-desc">
-            Real-time Pong in C++ with online, offline, and vs-computer modes. ENet synchronizes game state
-            between two networked clients; an OO engine with Ball / Paddle classes, a swappable theme-and-skin
-            system, and a custom menu UI.
-          </p>
-          <div class="project-stack">
-            <span class="tag">C++</span>
-            <span class="tag">Raylib</span>
-            <span class="tag">ENet</span>
-            <span class="tag">OOP</span>
-            <span class="tag">Networking</span>
           </div>
         </div>
 
@@ -1940,6 +2210,14 @@
     <p>© 2026 Muzamil Ali</p>
     <p><a href="mailto:me@muzamilali.online">me@muzamilali.online</a></p>
   </footer>
+
+  <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Project preview">
+    <button class="lightbox-close" type="button" aria-label="Close preview">✕</button>
+    <div class="lightbox-inner">
+      <div class="lightbox-media"></div>
+      <p class="lightbox-caption"></p>
+    </div>
+  </div>
 
   <script>
     const toggle = document.getElementById('themeToggle');
@@ -2428,6 +2706,10 @@
 
     document.querySelectorAll('.tag').forEach((tag) => {
       tag.title = 'double-click to trace this across the page';
+      // pillar cards are links now — a chip click shouldn't navigate
+      if (tag.closest('a')) {
+        tag.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); });
+      }
       tag.addEventListener('dblclick', () => {
         const name = tagName(tag);
         if (activeFilter === name) clearFilter();
@@ -2438,6 +2720,96 @@
     filterPill.addEventListener('click', clearFilter);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && activeFilter) clearFilter();
+    });
+
+    /* ── LIGHTBOX ──────────────────────────────────────────────────────
+       A project figure is only ~240px wide, so the real view opens here.
+       Three media kinds, declared per figure:
+         data-media="image"  + data-src
+         data-media="video"  + data-mp4 / data-webm (+ optional data-poster)
+         data-media="inline" — clones the figure's own <svg>
+       Video sources are injected on open, so nothing downloads until
+       someone actually asks for it. */
+    const lightbox = document.getElementById('lightbox');
+    const lbMedia = lightbox.querySelector('.lightbox-media');
+    const lbCaption = lightbox.querySelector('.lightbox-caption');
+    const lbClose = lightbox.querySelector('.lightbox-close');
+    let lbOpener = null;
+
+    const buildMedia = (fig) => {
+      const kind = fig.dataset.media;
+      if (kind === 'video') {
+        const v = document.createElement('video');
+        v.controls = true;
+        v.autoplay = true;
+        v.muted = true;
+        v.playsInline = true;
+        v.loop = !reduceMotion;
+        if (fig.dataset.poster) v.poster = fig.dataset.poster;
+        [['webm', 'video/webm'], ['mp4', 'video/mp4']].forEach(([key, type]) => {
+          if (!fig.dataset[key]) return;
+          const src = document.createElement('source');
+          src.src = fig.dataset[key];
+          src.type = type;
+          v.appendChild(src);
+        });
+        return v;
+      }
+      if (kind === 'inline') {
+        const svg = fig.querySelector('svg');
+        return svg ? svg.cloneNode(true) : null;
+      }
+      const img = document.createElement('img');
+      img.src = fig.dataset.src;
+      img.alt = fig.dataset.caption || '';
+      return img;
+    };
+
+    const openLightbox = (fig) => {
+      const node = buildMedia(fig);
+      if (!node) return;
+      lbOpener = fig;
+      lbMedia.replaceChildren(node);
+      lbCaption.textContent = fig.dataset.caption || '';
+      // lock the page without letting it jump sideways as the bar vanishes
+      const gutter = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = 'hidden';
+      if (gutter > 0) document.body.style.paddingRight = `${gutter}px`;
+      lightbox.classList.add('open');
+      lbClose.focus();
+    };
+
+    const closeLightbox = () => {
+      if (!lightbox.classList.contains('open')) return;
+      lightbox.classList.remove('open');
+      lbMedia.replaceChildren();          // stops playback and frees the decoder
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+      if (lbOpener) lbOpener.focus();
+      lbOpener = null;
+    };
+
+    document.querySelectorAll('.project-figure[data-media]').forEach((fig) => {
+      fig.setAttribute('aria-haspopup', 'dialog');
+      fig.addEventListener('click', () => openLightbox(fig));
+    });
+
+    lbClose.addEventListener('click', closeLightbox);
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();   // backdrop only
+    });
+
+    lightbox.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeLightbox(); return; }
+      if (e.key !== 'Tab') return;
+      // trap focus: the close button and any media controls are all in here
+      const focusable = [...lightbox.querySelectorAll('button, video, [href], [tabindex]:not([tabindex="-1"])')]
+        .filter((el) => el.offsetParent !== null);
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
 
     // Cursor-tracking glow on project cards
